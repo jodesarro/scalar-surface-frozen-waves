@@ -1,5 +1,5 @@
 # Surface Frozen Waves Intensity
-A C++ routine to evaluate the intensity of Surface Frozen Waves (SFWs) [[1](https://github.com/jodesarro/sfwi#references)].
+A C++ routine to evaluate the intensity of Surface Frozen Waves (SFWs) [[1](#references)].
 The code is a structured routine that may need improvement.
 It is not a "Clean Code", but it works!
 
@@ -31,4 +31,4 @@ After compiling, the program must be executed with the following parameters pass
 An example of usage within <a href="https://www.wolfram.com/mathematica/">Mathematica software</a> is in the folder [example-with-mathematica](example-with-mathematica) where sfwi.exe was compiled at a Windows-x64 architecture.
 
 ## References
-[[1](https://github.com/jodesarro/sfwi#surface-frozen-waves-intensity)] <a href="https://doi.org/10.1364/JOSAB.36.000638">L. A. Ambrosio, “Millimeter-structured nondiffracting surface beams,” J. Opt. Soc. Am. B, vol. 36, no. 3, p. 638, Mar. 2019.</a>
+[[1](#surface-frozen-waves-intensity)] <a href="https://doi.org/10.1364/JOSAB.36.000638">L. A. Ambrosio, “Millimeter-structured nondiffracting surface beams,” J. Opt. Soc. Am. B, vol. 36, no. 3, p. 638, Mar. 2019.</a>
