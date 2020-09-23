@@ -1,7 +1,6 @@
 # Surface Frozen Waves Intensity
 A C++ routine to evaluate the intensity of Surface Frozen Waves (SFWs) [[1](#references)].
 The code is a structured routine that may need improvement.
-It is not a "Clean Code", but it works!
 
 ## Usage
 After compiling, the program must be executed with the following parameters passed as arguments, 'nr ni l0 Q N L P cut_axis cut_value xmin xmax xpoints ymin ymax ypoints zmin zmax zpoints is_nonresistant file_in file_out', where:
@@ -28,7 +27,7 @@ After compiling, the program must be executed with the following parameters pass
 - **file_in**: the file path to the F function in <a href="https://math.nist.gov/MatrixMarket/formats.html">Matrix Market Array File Format (MTX)</a>;
 - **file_out**: the file path to save the intensities in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a>;
 
-An example of usage within <a href="https://www.wolfram.com/mathematica/">Mathematica software</a> is in the folder [example-with-mathematica](example-with-mathematica) where sfwi.exe was compiled at a Windows-x64 architecture.
+An example of usage within <a href="https://www.wolfram.com/mathematica/">Mathematica software</a> is in the folder [example-with-mathematica](example-with-mathematica) where surface-frozen-waves.exe was compiled at a Windows-x64 architecture.
 
 ## References
 [[1](#surface-frozen-waves-intensity)] <a href="https://doi.org/10.1364/JOSAB.36.000638">L. A. Ambrosio, “Millimeter-structured nondiffracting surface beams,” J. Opt. Soc. Am. B, vol. 36, no. 3, p. 638, Mar. 2019.</a>
