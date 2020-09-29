@@ -10,28 +10,35 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     43633,        740]
-NotebookOptionsPosition[     42835,        721]
-NotebookOutlinePosition[     43200,        737]
-CellTagsIndexPosition[     43157,        734]
+NotebookDataLength[     44308,        754]
+NotebookOptionsPosition[     43508,        735]
+NotebookOutlinePosition[     43874,        751]
+CellTagsIndexPosition[     43831,        748]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
 Notebook[{
 Cell[BoxData[{
  StyleBox[
-  RowBox[{
-  "EXAMPLE", " ", "OF", " ", "USAGE", " ", "OF", " ", "THE", " ", "PROGRAM", 
-   " ", "SFWI"}], "Title"], "\[IndentingNewLine]", 
+  RowBox[{"SURFACE", "-", "FROZEN", "-", "WAVES"}], 
+  "Title"], "\[IndentingNewLine]", 
  StyleBox[
-  RowBox[{
-   RowBox[{"Documentation", " ", "available", " ", "on", " ", 
-    RowBox[{"https", ":"}]}], "//", 
-   RowBox[{
+  RowBox[{"EXAMPLE", " ", "OF", " ", "USAGE"}], 
+  "Subtitle"], "\[IndentingNewLine]", 
+ StyleBox[
+  RowBox[{"Documentation", " ", "available", " ", "on", " ", 
+   ButtonBox[
     RowBox[{
+     RowBox[{"https", ":"}], "//", 
      RowBox[{
-      RowBox[{"github", ".", "com"}], "/", "jodesarro"}], "/", "surface"}], 
-    "-", "frozen", "-", "waves"}]}], 
+      RowBox[{
+       RowBox[{
+        RowBox[{"github", ".", "com"}], "/", "jodesarro"}], "/", "surface"}], 
+      "-", "frozen", "-", "waves"}]}],
+    BaseStyle->"Hyperlink",
+    ButtonData->{
+      URL["https://github.com/jodesarro/surface-frozen-waves"], None},
+    ButtonNote->"https://github.com/jodesarro/surface-frozen-waves"]}], 
   "Subtitle"], "\[IndentingNewLine]"}], "Input",
  CellChangeTimes->{{3.751184963005971*^9, 3.7511849754703927`*^9}, {
    3.7511853379228115`*^9, 3.7511853483674088`*^9}, {3.751898117000201*^9, 
@@ -40,19 +47,23 @@ Cell[BoxData[{
    3.7958964630071917`*^9}, {3.798293289535634*^9, 3.798293307853718*^9}, {
    3.798294216840254*^9, 3.7982942262653465`*^9}, {3.798294283973658*^9, 
    3.7982943679736814`*^9}, {3.7982947947968063`*^9, 3.7982948050660706`*^9}, 
-   3.7982948926240897`*^9, {3.809869092656208*^9, 
-   3.8098690961397333`*^9}},ExpressionUUID->"76108858-2d1a-4ac2-a372-\
+   3.7982948926240897`*^9, {3.809869092656208*^9, 3.8098690961397333`*^9}, {
+   3.8102014034174166`*^9, 
+   3.810201474875985*^9}},ExpressionUUID->"76108858-2d1a-4ac2-a372-\
 b5dc927c1589"],
 
 Cell[BoxData[
  RowBox[{
-  RowBox[{"PathToSfwi", " ", "=", " ", 
+  RowBox[{"PathToSfwExe", " ", "=", " ", 
    RowBox[{
     RowBox[{"NotebookDirectory", "[", "]"}], "<>", 
     "\"\<surface-frozen-waves.exe\>\""}]}], ";", " ", 
   RowBox[{"(*", " ", 
-   RowBox[{"Path", " ", "to", " ", "program", " ", "sfwi"}], " ", "*)"}], 
-  "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+    "Path", " ", "to", " ", "the", " ", "executable", " ", "surface"}], "-", 
+    "frozen", "-", 
+    RowBox[{"waves", ".", "exe"}]}], " ", "*)"}], "\[IndentingNewLine]", 
   RowBox[{"PathToF", " ", "=", " ", 
    RowBox[{
     RowBox[{"NotebookDirectory", "[", "]"}], "<>", 
@@ -71,7 +82,8 @@ Cell[BoxData[
  CellChangeTimes->{
   3.798294889768614*^9, 3.7983129544965744`*^9, {3.803747903563943*^9, 
    3.8037479052818327`*^9}, {3.8098691005766745`*^9, 
-   3.8098691056218815`*^9}},ExpressionUUID->"1410cb88-66d6-4f39-8707-\
+   3.8098691056218815`*^9}, {3.8102015096576347`*^9, 3.810201536068062*^9}, 
+   3.8102016398322577`*^9},ExpressionUUID->"1410cb88-66d6-4f39-8707-\
 279ebfc6cdad"],
 
 Cell[BoxData[
@@ -204,10 +216,10 @@ Cell[BoxData[
    RowBox[{
     RowBox[{"P", "=", "472"}], ";"}], "\[IndentingNewLine]", 
    RowBox[{
-    RowBox[{"CutAxis", " ", "=", " ", "\"\<y\>\""}], ";"}], 
+    RowBox[{"SliceAxisName", " ", "=", " ", "\"\<y\>\""}], ";"}], 
    "\[IndentingNewLine]", 
    RowBox[{
-    RowBox[{"CutValue", "=", "0."}], ";"}], "\[IndentingNewLine]", 
+    RowBox[{"SliceAxisValue", "=", "0."}], ";"}], "\[IndentingNewLine]", 
    RowBox[{
     RowBox[{"xmin", "=", "0."}], ";"}], "\[IndentingNewLine]", 
    RowBox[{
@@ -224,12 +236,11 @@ Cell[BoxData[
     RowBox[{"xpoints", "=", 
      RowBox[{"2", "P"}]}], ";"}], "\[IndentingNewLine]", 
    RowBox[{
-    RowBox[{"ymin", "=", "0."}], ";"}], "\[IndentingNewLine]", 
+    RowBox[{"ymin", "=", "0"}], ";"}], "\[IndentingNewLine]", 
    RowBox[{
-    RowBox[{"ymax", "=", 
-     RowBox[{"0.5", "xmax"}]}], ";"}], "\[IndentingNewLine]", 
+    RowBox[{"ymax", "=", "0"}], ";"}], "\[IndentingNewLine]", 
    RowBox[{
-    RowBox[{"ypoints", "=", "P"}], ";"}], "\[IndentingNewLine]", 
+    RowBox[{"ypoints", "=", "0"}], ";"}], "\[IndentingNewLine]", 
    RowBox[{
     RowBox[{"zmin", "=", "0."}], ";"}], "\[IndentingNewLine]", 
    RowBox[{
@@ -580,8 +591,9 @@ Cell[BoxData[
    3.7982945186159487`*^9, 3.798294519127353*^9}, {3.798294671971958*^9, 
    3.7982946851803503`*^9}, {3.798294727476021*^9, 3.7982947561897793`*^9}, {
    3.798294872355792*^9, 3.79829488223448*^9}, {3.7983129733826876`*^9, 
-   3.7983130130770845`*^9}, {3.803983465104447*^9, 
-   3.8039834875037084`*^9}},ExpressionUUID->"28f12387-f082-4755-8909-\
+   3.7983130130770845`*^9}, {3.803983465104447*^9, 3.8039834875037084`*^9}, {
+   3.8102012751575985`*^9, 3.8102012861513476`*^9}, {3.8102013264568577`*^9, 
+   3.810201331617796*^9}},ExpressionUUID->"28f12387-f082-4755-8909-\
 1d7167a34f99"],
 
 Cell[BoxData[
@@ -592,7 +604,7 @@ Cell[BoxData[
    RowBox[{"RunProcess", "[", 
     RowBox[{
      RowBox[{"{", 
-      RowBox[{"PathToSfwi", ",", "\[IndentingNewLine]", 
+      RowBox[{"PathToSfwExe", ",", "\[IndentingNewLine]", 
        RowBox[{"ToString", "[", 
         RowBox[{"DecimalForm", "[", "nr", "]"}], "]"}], ",", 
        "\[IndentingNewLine]", 
@@ -610,9 +622,10 @@ Cell[BoxData[
         RowBox[{"DecimalForm", "[", "L", "]"}], "]"}], ",", 
        "\[IndentingNewLine]", 
        RowBox[{"ToString", "[", "P", "]"}], ",", "\[IndentingNewLine]", 
-       RowBox[{"ToString", "[", "CutAxis", "]"}], ",", "\[IndentingNewLine]", 
+       RowBox[{"ToString", "[", "SliceAxisName", "]"}], ",", 
+       "\[IndentingNewLine]", 
        RowBox[{"ToString", "[", 
-        RowBox[{"DecimalForm", "[", "CutValue", "]"}], "]"}], ",", 
+        RowBox[{"DecimalForm", "[", "SliceAxisValue", "]"}], "]"}], ",", 
        "\[IndentingNewLine]", 
        RowBox[{"ToString", "[", 
         RowBox[{"DecimalForm", "[", "xmin", "]"}], "]"}], ",", 
@@ -672,7 +685,8 @@ Cell[BoxData[
    3.7978002184492216`*^9}, {3.79829394525895*^9, 3.798294100470149*^9}, {
    3.7982941314507647`*^9, 3.7982941424847994`*^9}, 3.7982948565850363`*^9, {
    3.79829491418419*^9, 3.7982949317832313`*^9}, {3.803983506745748*^9, 
-   3.80398353600204*^9}},ExpressionUUID->"8a9c0967-dedb-4900-abfe-\
+   3.80398353600204*^9}, {3.8102012751575985`*^9, 3.8102012861513476`*^9}, 
+   3.8102016398478775`*^9},ExpressionUUID->"8a9c0967-dedb-4900-abfe-\
 c2765ce53991"],
 
 Cell[BoxData[
@@ -719,8 +733,8 @@ Cell[BoxData[
    3.7983130041255627`*^9}},ExpressionUUID->"ced69acf-ecc0-41f1-81a8-\
 adb62653f2a6"]
 },
-WindowSize->{1344, 685},
-WindowMargins->{{-8, Automatic}, {Automatic, 0}},
+WindowSize->{1360, 685},
+WindowMargins->{{-8, Automatic}, {Automatic, -8}},
 CellContext->Notebook,
 FrontEndVersion->"12.0 for Microsoft Windows (64-bit) (April 8, 2019)",
 StyleDefinitions->"Default.nb"
@@ -736,12 +750,12 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[558, 20, 1150, 24, 98, "Input",ExpressionUUID->"76108858-2d1a-4ac2-a372-b5dc927c1589"],
-Cell[1711, 46, 1153, 28, 86, "Input",ExpressionUUID->"1410cb88-66d6-4f39-8707-279ebfc6cdad"],
-Cell[2867, 76, 5177, 101, 111, "Input",ExpressionUUID->"3f0b88d0-396d-4c0c-bf13-606727e5e43e"],
-Cell[8047, 179, 27315, 405, 447, "Input",ExpressionUUID->"28f12387-f082-4755-8909-1d7167a34f99"],
-Cell[35365, 586, 5013, 89, 485, "Input",ExpressionUUID->"8a9c0967-dedb-4900-abfe-c2765ce53991"],
-Cell[40381, 677, 2450, 42, 69, "Input",ExpressionUUID->"ced69acf-ecc0-41f1-81a8-adb62653f2a6"]
+Cell[558, 20, 1462, 32, 133, "Input",ExpressionUUID->"76108858-2d1a-4ac2-a372-b5dc927c1589"],
+Cell[2023, 54, 1327, 32, 86, "Input",ExpressionUUID->"1410cb88-66d6-4f39-8707-279ebfc6cdad"],
+Cell[3353, 88, 5177, 101, 111, "Input",ExpressionUUID->"3f0b88d0-396d-4c0c-bf13-606727e5e43e"],
+Cell[8533, 191, 27402, 405, 447, "Input",ExpressionUUID->"28f12387-f082-4755-8909-1d7167a34f99"],
+Cell[35938, 598, 5113, 91, 485, "Input",ExpressionUUID->"8a9c0967-dedb-4900-abfe-c2765ce53991"],
+Cell[41054, 691, 2450, 42, 69, "Input",ExpressionUUID->"ced69acf-ecc0-41f1-81a8-adb62653f2a6"]
 }
 ]
 *)

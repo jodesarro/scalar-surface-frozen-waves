@@ -25,8 +25,8 @@ struct SfwParameters
     complex<double> n;
     double l0, Q, L, H;
     int N, P;
-    char* cut_axis = new char[1];
-    double cut_value, xmin, xmax, ymin, ymax, zmin, zmax;
+    char* slice_axis_name = new char[1];
+    double slice_axis_value, xmin, xmax, ymin, ymax, zmin, zmax;
     int xpoints, ypoints, zpoints, is_nonresistant;
     string file_in, file_out;
     long int start_time;
@@ -60,8 +60,8 @@ void log_input_parameters( SfwParameters sfw )
     cout << "N = " << sfw.N << endl;
     cout << "L = " << sfw.L << endl;
     cout << "P = " << sfw.P << endl;
-    cout << "cut_axis = " << sfw.cut_axis[0] << endl;
-    cout << "cut_value = " << sfw.cut_value << endl;
+    cout << "slice_axis_name = " << sfw.slice_axis_name[0] << endl;
+    cout << "slice_axis_value = " << sfw.slice_axis_value << endl;
     cout << "xmin = " << sfw.xmin << endl;
     cout << "xmax = " << sfw.xmax << endl;
     cout << "xpoints = " << sfw.xpoints << endl;
@@ -101,8 +101,8 @@ int main(int argc, char *argv[])
         sfw.N  = atoi(argv[5]);
         sfw.L  = atof(argv[6]);
         sfw.P  = atoi(argv[7]);
-        sfw.cut_axis = argv[8];
-        sfw.cut_value = atof(argv[9]);
+        sfw.slice_axis_name = argv[8];
+        sfw.slice_axis_value = atof(argv[9]);
         sfw.xmin = atof(argv[10]);
         sfw.xmax = atof(argv[11]);
         sfw.xpoints = atoi(argv[12]);
@@ -211,12 +211,15 @@ int main(int argc, char *argv[])
     // === INTENSITY OF SFW ==========================================
     double * sfwi;
     int mtx_rows, mtx_columns;
-    if ( sfw.cut_axis[0] == 'y' || sfw.cut_axis[0] == 'Y' )
+    if ( sfw.slice_axis_name[0] == 'y' || sfw.slice_axis_name[0] == 'Y' )
     {     
+        sfw.ymin = 0;
+        sfw.ymax = 0;
+        sfw.ypoints = 0;
         sfwi = new double [ sfw.xpoints*sfw.zpoints ];
         double dx = (sfw.xmax-sfw.xmin)/( double(sfw.xpoints) );
         double dz = (sfw.zmax-sfw.zmin)/( double(sfw.zpoints) );
-        double var_yy = sfw.cut_value*sfw.cut_value;
+        double var_yy = sfw.slice_axis_value*sfw.slice_axis_value;
 
         // Longitudinal iteration
         for ( int iz=0; iz<sfw.zpoints; iz++ )
@@ -261,12 +264,15 @@ int main(int argc, char *argv[])
         mtx_rows = sfw.xpoints;
         mtx_columns = sfw.zpoints;
     }
-    else if ( sfw.cut_axis[0] == 'z' || sfw.cut_axis[0] == 'Z' )
+    else if ( sfw.slice_axis_name[0] == 'z' || sfw.slice_axis_name[0] == 'Z' )
     {
+        sfw.zmin = 0;
+        sfw.zmax = 0;
+        sfw.zpoints = 0;
         sfwi = new double [ sfw.xpoints*sfw.ypoints ];
         double dx = (sfw.xmax-sfw.xmin)/( double(sfw.xpoints) );
         double dy = (sfw.ymax-sfw.ymin)/( double(sfw.ypoints) );
-        complex<double> var_iz = complex<double> (0., sfw.cut_value);
+        complex<double> var_iz = complex<double> (0., sfw.slice_axis_value);
 
         // Transversal iteration
         for ( int iy=0; iy<sfw.ypoints; iy++ )
@@ -312,13 +318,16 @@ int main(int argc, char *argv[])
         mtx_rows = sfw.xpoints;
         mtx_columns = sfw.ypoints;
     }
-    else if ( sfw.cut_axis[0] == 'x' || sfw.cut_axis[0] == 'X' )
+    else if ( sfw.slice_axis_name[0] == 'x' || sfw.slice_axis_name[0] == 'X' )
     {
+        sfw.xmin = 0;
+        sfw.xmax = 0;
+        sfw.xpoints = 0;
         sfwi = new double [ sfw.ypoints*sfw.zpoints ];
         double dy = (sfw.ymax-sfw.ymin)/( double(sfw.ypoints) );
         double dz = (sfw.zmax-sfw.zmin)/( double(sfw.zpoints) );
-        double var_xx = sfw.cut_value*sfw.cut_value;
-        double var_2rho_cosphi = 2.0*sfw.cut_value;
+        double var_xx = sfw.slice_axis_value*sfw.slice_axis_value;
+        double var_2rho_cosphi = 2.0*sfw.slice_axis_value;
 
         // Longitudinal iteration
         for ( int iz=0; iz<sfw.zpoints; iz++ )
@@ -371,7 +380,7 @@ int main(int argc, char *argv[])
 
     // === WRITE MTX FILE ============================================
     string mtx_comments;
-    mtx_comments = "%nr ni l0 Q N L P H cut_axis cut_value xmin xmax xpoints ymin ymax ypoints zmin zmax zpoints is_nonresistant elapsed_time\n" "%" + to_string(real(sfw.n)) + " " + to_string(imag(sfw.n)) + " " + to_string(sfw.l0) + " " + to_string(sfw.Q) + " " + to_string(sfw.N) + " " + to_string(sfw.L) + " " + to_string(sfw.P) + " " + to_string(sfw.H) + " " + sfw.cut_axis[0] + " " + to_string(sfw.cut_value) + " " + to_string(sfw.xmin) + " " + to_string(sfw.xmax) + " " + to_string(sfw.xpoints) + " " + to_string(sfw.ymin) + " " + to_string(sfw.ymax) + " " + to_string(sfw.ypoints) + " " + to_string(sfw.zmin) + " " + to_string(sfw.zmax) + " " + to_string(sfw.zpoints) + " " + to_string(sfw.is_nonresistant) + " " + to_string( time(NULL) - sfw.start_time )  + "\n";
+    mtx_comments = "nr ni l0 Q N L P H slice_axis_name slice_axis_value xmin xmax xpoints ymin ymax ypoints zmin zmax zpoints is_nonresistant elapsed_time\n" "%" + to_string(real(sfw.n)) + " " + to_string(imag(sfw.n)) + " " + to_string(sfw.l0) + " " + to_string(sfw.Q) + " " + to_string(sfw.N) + " " + to_string(sfw.L) + " " + to_string(sfw.P) + " " + to_string(sfw.H) + " " + sfw.slice_axis_name[0] + " " + to_string(sfw.slice_axis_value) + " " + to_string(sfw.xmin) + " " + to_string(sfw.xmax) + " " + to_string(sfw.xpoints) + " " + to_string(sfw.ymin) + " " + to_string(sfw.ymax) + " " + to_string(sfw.ypoints) + " " + to_string(sfw.zmin) + " " + to_string(sfw.zmax) + " " + to_string(sfw.zpoints) + " " + to_string(sfw.is_nonresistant) + " " + to_string( time(NULL) - sfw.start_time )  + "\n";
     mtx_write_from_array( sfw.file_out, mtx_comments, mtx_rows, mtx_columns, sfwi );
 
     delete[] sfwi;
