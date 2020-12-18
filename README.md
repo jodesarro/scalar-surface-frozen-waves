@@ -42,7 +42,7 @@ An example of usage within <a href="https://www.wolfram.com/mathematica/">Mathem
 
 [6] List of the *method*s:
 - *traditional*: a traditional SFW that appears in [[1-4](#references)];
-- *traditional_nonresistant*: a non-resistant version of the SFW described in section 3.A of [[1](#references)];
+- *traditional_nonresistant*: a non-resistant version of the traditional SFW as described in section 3.A of [[1](#references)];
 - *modified*: method developed in chapter II of [[5](#references)];
 - *paraxial_apodized*: method developed in chapter III of [[5](#references)];
 - *finite_energy*: method developed in chapter IV of [[5](#references)].
