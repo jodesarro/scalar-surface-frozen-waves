@@ -886,8 +886,8 @@ int main( int argc, char *argv[] )
     mtx_comments = "nr ni l0 N L P H slice_axis_name slice_axis_value "
                     "xmin xmax xpoints ymin ymax ypoints zmin zmax zpoints "
                     "method w0 elapsed_time\n"
-                    "%" + to_string(real(parameters.n))
-                    + to_string(parameters.l0) + " " + parameters.file_Qp + " "
+                    "%" + to_string(real(parameters.n)) + " " + to_string(imag(parameters.n)) + " "
+                    + to_string(parameters.l0) + " "
                     + to_string(parameters.N) + " " + to_string(parameters.L) + " "
                     + to_string(parameters.P) + " " + to_string(parameters.H) + " "
                     + parameters.slice_axis_name[0] + " " + to_string(parameters.slice_axis_value) + " "
