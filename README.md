@@ -30,7 +30,7 @@ After compiling, the program must be executed with the following parameters pass
 - ***file_sip***: the file path to the SIP *F*(*x*<sub>*p*</sub>,*z*) in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a>;
 - ***file_psi***: the file path to save the intensity |*Ψ*(*x*,*y*,*z*)|² in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a>;
 
-An example of usage within <a href="https://www.wolfram.com/mathematica/">Mathematica software</a> is in the folder [example-with-mathematica](example-with-mathematica) where *surface-frozen-waves.exe* was compiled at a Windows-x64 architecture.
+An example of usage within <a href="https://www.wolfram.com/mathematica/">Mathematica software</a> is in the zip file *example-with-mathematica.zip* where *surface-frozen-waves.exe* was compiled at a Windows-x64 architecture.
 
 ## References
 [1] J. O. de Sarro, L. A. Ambrosio, “Surface beams resistant to diffraction and attenuation and structured at the millimeter scale”, 2020.
