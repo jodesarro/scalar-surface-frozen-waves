@@ -1,16 +1,19 @@
 # Surface Frozen Waves Intensity
-A C++ routine to evaluate the intensity of scalar zeroth order Surface Frozen Waves (SFWs) [[1-5](#references)].
+A C++ routine to evaluate the intensity of scalar zeroth order surface frozen waves (SFWs) [[1-5](#references)].
+
+The ordinary SFW, composed by linear frozen waves (LFWs), posses height and length proportional to the desired superficial intensity pattern (SIP).
+The LFWs are equally spaced, with the same parameters L and N but distincts Q<sub>p</sub>.
 
 ## Usage
-After compiling, the program must be executed with the following parameters passed as arguments, '*nr* *ni* *l0* *Q* *N* *L* *P* *slice_axis_name* *slice_axis_value* *xmin* *xmax* *xpoints* *ymin* *ymax* *ypoints* *zmin* *zmax* *zpoints* *method* *w0* *file_in* *file_out*', where:
+After compiling, the program must be executed with the following parameters passed as arguments, '*nr* *ni* *l0* *file_Qp* *N* *L* *P* *slice_axis_name* *slice_axis_value* *xmin* *xmax* *xpoints* *ymin* *ymax* *ypoints* *zmin* *zmax* *zpoints* *method* *w0* *file_sip* *file_psi*', where:
 
 - ***nr***: real part of the refractive index;
 - ***ni***: imaginary part of the refractive index;
 - ***l0***: wavelength in vacuum;
-- ***Q***: parameter *Q* of the SFWs;
+- ***file_Qp***: the file path to the *Q<sub>p</sub>* in <a href="https://math.nist.gov/MatrixMarket/formats.html">Matrix Market Array File Format (MTX)</a>;
 - ***N***: number related to Bessel beams, resulting in a total of 2*N*+1 Bessel beams;
 - ***L***: parameter *L* of the SFWs;
-- ***P***: number of linear FWs;
+- ***P***: number of LFWs;
 - ***slice_axis_name***: the axis (*x*, *y* or *z*) where the 2D-plot occur perpendicular to it;
 - ***slice_axis_value***: the point of the *slice_axis_name* where the 2D-plot occur;
 - ***xmin***: minimum *x* to be calculated (it will be ignored if *slice_axis_name* = *x*);
@@ -24,13 +27,13 @@ After compiling, the program must be executed with the following parameters pass
 - ***zpoints***: number of points in *z* (it will be ignored if *slice_axis_name* = *z*);
 - ***method***: the generation method. A list containing all the methods is available in [[6](#references)]; 
 - ***w0***: the gaussian waist for the *method*s *finite_energy* and *paraxial_apodized* (it will be ignored for any other *method*);
-- ***file_in***: the file path to the *F* function in <a href="https://math.nist.gov/MatrixMarket/formats.html">Matrix Market Array File Format (MTX)</a>;
-- ***file_out***: the file path to save the intensities in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a>;
+- ***file_sip***: the file path to the SIP *F*(*x*<sub>*p*</sub>,*z*) in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a>;
+- ***file_psi***: the file path to save the intensity |*Ψ*(*x*,*y*,*z*)|² in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a>;
 
 An example of usage within <a href="https://www.wolfram.com/mathematica/">Mathematica software</a> is in the folder [example-with-mathematica](example-with-mathematica) where *surface-frozen-waves.exe* was compiled at a Windows-x64 architecture.
 
 ## References
-[1]
+[1] J. O. de Sarro, L. A. Ambrosio, “Surface beams resistant to diffraction and attenuation and structured at the millimeter scale”, 2020.
 
 [2]<a href="https://doi.org/10.1364/JOSAB.36.000638"> L. A. Ambrosio, “Millimeter-structured nondiffracting surface beams”, J. Opt. Soc. Am. B, vol. 36, no. 3, p. 638, Mar. 2019.</a>
 
