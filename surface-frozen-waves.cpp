@@ -883,10 +883,10 @@ int main( int argc, char *argv[] )
 
     // Write to .mtx file
     string mtx_comments;
-    mtx_comments = "nr ni l0 file_Qp N L P H slice_axis_name slice_axis_value "
+    mtx_comments = "nr ni l0 N L P H slice_axis_name slice_axis_value "
                     "xmin xmax xpoints ymin ymax ypoints zmin zmax zpoints "
-                    "method w0 file_sip file_psi elapsed_time\n"
-                    "%" + to_string(real(parameters.n)) + " \"" + to_string(imag(parameters.n)) + "\" "
+                    "method w0 elapsed_time\n"
+                    "%" + to_string(real(parameters.n))
                     + to_string(parameters.l0) + " " + parameters.file_Qp + " "
                     + to_string(parameters.N) + " " + to_string(parameters.L) + " "
                     + to_string(parameters.P) + " " + to_string(parameters.H) + " "
@@ -896,8 +896,7 @@ int main( int argc, char *argv[] )
                     + to_string(parameters.ymax) + " " + to_string(parameters.ypoints) + " "
                     + to_string(parameters.zmin) + " " + to_string(parameters.zmax) + " "
                     + to_string(parameters.zpoints) + " " + parameters.method + " "
-                    + to_string(parameters.w0) + " \"" + parameters.file_sip + "\" \""
-                    + parameters.file_psi + "\" " + to_string( time(NULL) - parameters.start_time );
+                    + to_string(parameters.w0) + to_string( time(NULL) - parameters.start_time );
     mtx_write_from_array( parameters.file_psi, mtx_comments, mtx_rows, mtx_columns, sfwi );
 
     delete[] sfwi;
