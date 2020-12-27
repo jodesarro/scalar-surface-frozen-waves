@@ -58,7 +58,7 @@ void log_information()
     puts("DESCRIPTION");
     puts("A C++ routine to evaluate the intensity of scalar zeroth order "
          "surface frozen waves. Documentation and latest release available "
-         "on 'https://github.com/jodesarro/surface-frozen-waves'.\n");
+         "on 'https://github.com/jodesarro/scalar-surface-frozen-waves'.\n");
 }
 
 void log_wrong_parameters_amount()
