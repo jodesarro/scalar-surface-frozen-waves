@@ -27,7 +27,7 @@ After compiling, the program must be executed with the following parameters pass
 - ***zpoints***: number of points in *z* (it will be ignored if *slice_axis_name* = *z*);
 - ***method***: the generation method. A list containing all the methods is available in [[6](#references)]; 
 - ***w0***: the gaussian waist for the *method*s *finite_energy* and *paraxial_apodized* (it will be ignored for any other *method*);
-- ***file_bbar***: file path in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a> to the *&#x035E;&#946;*<sub>*p*</sub> parameter responsible to compensate the losses for the method *modified_resistant* (it will be ignored for any other *method*);
+- ***file_bbar***: file path in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a> to the *&#946;&#x035E;*<sub>*p*</sub> parameter responsible to compensate the losses for the method *modified_resistant* (it will be ignored for any other *method*);
 - ***file_sip***: file path to the SIP *F*(*x*<sub>*p*</sub>,*z*) in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a>;
 - ***file_psi***: file path to save the intensity |*Ψ*(*x*,*y*,*z*)|² in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a>;
 
@@ -50,4 +50,4 @@ An example of usage within <a href="https://www.wolfram.com/mathematica/">Mathem
 - *modified*: method developed in chapter II of [[5](#references)];
 - *paraxial_apodized*: method developed in chapter III of [[5](#references)];
 - *finite_energy*: method developed in chapter IV of [[5](#references)];
-- *modified_resistant*: a modified version of the *traditional_resistant* method where one can compensate the losses by means of the parameter *&#946;&#x035E;&#946;*<sub>*p*</sub>.
+- *modified_resistant*: a modified version of the *traditional_resistant* method where one can compensate the losses by means of the parameter *&#946;&#x035E;*<sub>*p*</sub>.
