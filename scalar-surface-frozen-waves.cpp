@@ -18,6 +18,7 @@
 #include <iomanip>
 #include <ctime>
 #include <cstdlib>
+#include <algorithm> 
 #include "./../bessel-library/bessel-library.hpp" // A library to evaluate Bessel functions available
                                                   //  on https://github.com/jodesarro/bessel-library
 #include "./../mtx-library/mtx-library.cpp" // A library to handle mtx files available
@@ -37,22 +38,23 @@ struct InputParameters
 {
     complex<double> n;
     double l0;
-    string file_Qp;
+    string file_Q;
     int N;
-    double L, H;
+    string file_L;
+    double H;
     int P;
     char* slice_axis_name = new char[1];
     double slice_axis_value, xmin, xmax, ymin, ymax, zmin, zmax;
     int xpoints, ypoints, zpoints;
     string method;
     double w0;
-    string file_sip, file_psi;
+    string file_bbar, file_sip, file_psi;
     long int start_time;
 };
 
 void log_information()
 {
-    puts("\n| SURFACE-FROZEN-WAVES | 21 DEZ 2020 | @JODESARRO |\n");
+    puts("\n| SCALAR-SURFACE-FROZEN-WAVES | 27 DEZ 2020 | @JODESARRO |\n");
     puts("DESCRIPTION");
     puts("A C++ routine to evaluate the intensity of scalar zeroth order "
          "surface frozen waves. Documentation and latest release available "
@@ -73,9 +75,9 @@ void log_input_parameters( InputParameters parameters )
     cout << "nr = " << real(parameters.n) << endl;
     cout << "ni = " << imag(parameters.n) << endl;
     cout << "l0 = " << parameters.l0 << endl;
-    cout << "file_Qp = " << parameters.file_Qp << endl;
+    cout << "file_Q = " << parameters.file_Q << endl;
     cout << "N = " << parameters.N << endl;
-    cout << "L = " << parameters.L << endl;
+    cout << "file_L = " << parameters.file_L << endl;
     cout << "P = " << parameters.P << endl;
     cout << "slice_axis_name = " << parameters.slice_axis_name[0] << endl;
     cout << "slice_axis_value = " << parameters.slice_axis_value << endl;
@@ -90,6 +92,7 @@ void log_input_parameters( InputParameters parameters )
     cout << "zpoints = " << parameters.zpoints << endl;
     cout << "method = " << parameters.method << endl;
     cout << "w0 = " << parameters.w0 << endl;
+    cout << "file_bbar = " << parameters.file_bbar << endl;
     cout << "file_sip = " << parameters.file_sip << endl;
     cout << "file_psi = " << parameters.file_psi << endl << endl;
 }
@@ -101,7 +104,7 @@ void log_progress_calculating()
 }
 
 void calculate_wave_vectors( InputParameters parameters, complex<double> * b,
-                            complex<double> * h, double * Q, int IQMAX, int IPMAX )
+                            complex<double> * h, double * Q, double * L, int IQMAX, int IPMAX )
 {
     complex<double> k = M_2PI*parameters.n/parameters.l0;
     complex<double> kk = k*k;
@@ -120,11 +123,11 @@ void calculate_wave_vectors( InputParameters parameters, complex<double> * b,
             {
                 double q = iq - parameters.N;
                 b[iq + IQMAX*ip] = complex<double> (
-                                                    Q[ip] + M_2PI*q/parameters.L,
-                                                    imag(k) * ( double(2) - ( Q[ip] + M_2PI*q/parameters.L )/real(k) )
+                                                    Q[ip] + M_2PI*q/L[ip],
+                                                    imag(k) * ( double(2) - ( Q[ip] + M_2PI*q/L[ip] )/real(k) )
                                                    );
                 h[iq + IQMAX*ip] = M_SQRT2
-                                    * sqrt( double(1) - ( double(1)/real(k) ) * ( Q[ip] + M_2PI*q/parameters.L ) )
+                                    * sqrt( double(1) - ( double(1)/real(k) ) * ( Q[ip] + M_2PI*q/L[ip] ) )
                                     * abs(k);
             }
         }
@@ -138,11 +141,11 @@ void calculate_wave_vectors( InputParameters parameters, complex<double> * b,
             {
                 double q = iq - parameters.N;
                 b[iq + IQMAX*ip] = complex<double> (
-                                                    Q[ip] + M_2PI*q/parameters.L,
-                                                    imag(k) * ( double(2) - ( Q[ip] + M_2PI*q/parameters.L )/real(k) )
+                                                    Q[ip] + M_2PI*q/L[ip],
+                                                    imag(k) * ( double(2) - ( Q[ip] + M_2PI*q/L[ip] )/real(k) )
                                                    );
                 h[iq + IQMAX*ip] = M_SQRT2
-                                    * sqrt( double(1) - (double(1)/real(k)) * ( Q[ip] + M_2PI*q/parameters.L ) )
+                                    * sqrt( double(1) - (double(1)/real(k)) * ( Q[ip] + M_2PI*q/L[ip] ) )
                                     * abs(k);
             }
         }
@@ -156,19 +159,20 @@ void calculate_wave_vectors( InputParameters parameters, complex<double> * b,
             {
                 double q = iq-parameters.N;
                 b[iq + IQMAX*ip] = complex<double> (
-                                                    Q[ip] + M_2PI*q/parameters.L,
-                                                    k0k0*real(parameters.n)*imag(parameters.n) / (Q[ip] + M_2PI*q/parameters.L)
+                                                    Q[ip] + M_2PI*q/L[ip],
+                                                    k0k0*real(parameters.n)*imag(parameters.n) / (Q[ip] + M_2PI*q/L[ip])
                                                    );
                 h[iq + IQMAX*ip] = sqrt(
                                         ( real(parameters.n)*real(parameters.n) - imag(parameters.n)*imag(parameters.n) )*k0k0
-                                        - ( Q[ip] + M_2PI*q/parameters.L ) * ( Q[ip] + M_2PI*q/parameters.L )
-                                        + ( k0k0*real(parameters.n)*imag(parameters.n) / ( Q[ip] + M_2PI*q/parameters.L ) )
-                                        * ( k0k0*real(parameters.n)*imag(parameters.n) / ( Q[ip] + M_2PI*q/parameters.L ) )
+                                        - ( Q[ip] + M_2PI*q/L[ip] ) * ( Q[ip] + M_2PI*q/L[ip] )
+                                        + ( k0k0*real(parameters.n)*imag(parameters.n) / ( Q[ip] + M_2PI*q/L[ip] ) )
+                                        * ( k0k0*real(parameters.n)*imag(parameters.n) / ( Q[ip] + M_2PI*q/L[ip] ) )
                                        );
             }
         }
     }
-    else if ( parameters.method == "traditional" || parameters.method == "traditional_nonresistant" )
+    else if ( parameters.method == "traditional_resistant" || parameters.method == "traditional_nonresistant"
+             || parameters.method == "modified_resistant" )
     {
         // Eqs (2)-(4) of [4].
         for ( int ip=0; ip<IPMAX; ip++ )
@@ -177,8 +181,8 @@ void calculate_wave_vectors( InputParameters parameters, complex<double> * b,
             {
                 double q = iq-parameters.N;
                 b[iq + IQMAX*ip] = complex<double> (
-                                                    Q[ip] + M_2PI*q/parameters.L,
-                                                    ( Q[ip] + M_2PI*q/parameters.L ) * imag(parameters.n)/real(parameters.n)
+                                                    Q[ip] + M_2PI*q/L[ip],
+                                                    ( Q[ip] + M_2PI*q/L[ip] ) * imag(parameters.n)/real(parameters.n)
                                                    );
                 h[iq + IQMAX*ip] = sqrt(
                                         kk - b[iq + IQMAX*ip] * b[iq + IQMAX*ip]
@@ -189,7 +193,7 @@ void calculate_wave_vectors( InputParameters parameters, complex<double> * b,
 }
 
 void calculate_coefficients_A( InputParameters parameters, complex<double> * b, complex<double> * h,
-                              complex<double> * A, double * Q, int IQMAX, int IPMAX, double * F,
+                              complex<double> * A, double * Q, double * L, double * bbar, int IQMAX, int IPMAX, double * F,
                               int IIMAX, int IKMAX )
 {
     // The following is an approximation of the A_qp integral by trapezoidal method
@@ -207,9 +211,9 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
         {
             int ii = int ( floor( ip * (IIMAX-1)/(IPMAX-1) ) );
             complex<double> G0 = double (1);
-            complex<double> GL = exp( - imag(k)*parameters.L )
+            complex<double> GL = exp( - imag(k)*L[ip] )
                                 * exp(
-                                      - h[0 + IQMAX*ip]*h[0 + IQMAX*ip] * parameters.L*parameters.L
+                                      - h[0 + IQMAX*ip]*h[0 + IQMAX*ip] * L[ip]*L[ip]
                                       / ( parameters.w0*parameters.w0 * real(k)*real(k) )
                                      );
 
@@ -223,7 +227,7 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
                                            );
                 for ( int ik=1; ik<IKMAX-1; ik++ )
                 {
-                    double z = ik*parameters.L/(IKMAX-1);
+                    double z = ik*L[ip]/(IKMAX-1);
                     
                     complex<double> Gz = exp( - imag(k)*z )
                                         * exp(
@@ -232,7 +236,7 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
                                              );
 
                     temp += ( F[ ii + IIMAX*ik ]/Gz )
-                            * exp( complex<double>(0., -M_2PI*q*z/parameters.L) );
+                            * exp( complex<double>(0., -M_2PI*q*z/L[ip]) );
                 }
                 A[ iq + IQMAX*ip ] = temp/( double (IKMAX-1) );
             }
@@ -252,15 +256,15 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
                 double q = iq - parameters.N;
 
                 complex<double> temp = 0.5*(
-                                            ( F[ ii + IIMAX*(IKMAX-1) ] )*exp( imag(b[0 + IQMAX*ip]) * parameters.L )
+                                            ( F[ ii + IIMAX*(IKMAX-1) ] )*exp( imag(b[0 + IQMAX*ip]) * L[ip] )
                                             + F[ ii + 0 ]
                                            );
                 for ( int ik=1; ik<IKMAX-1; ik++ )
                 {
-                    double z = ik*parameters.L/(IKMAX-1);
+                    double z = ik*L[ip]/(IKMAX-1);
                     
                     temp += ( F[ ii + IIMAX*ik ] )
-                            * exp( complex<double>(0., -M_2PI*q*z/parameters.L) )
+                            * exp( complex<double>(0., -M_2PI*q*z/L[ip]) )
                             * exp( imag(b[0 + IQMAX*ip]) * z );
                 }
                 A[ iq + IQMAX*ip ] = temp/( double (IKMAX-1) );
@@ -281,14 +285,14 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
                 double q = iq-parameters.N;
 
                 complex<double> temp = 0.5*(
-                                            ( F[ ii + IIMAX*(IKMAX-1) ] )*exp( imag(b[0 + IQMAX*ip]) * parameters.L )
+                                            ( F[ ii + IIMAX*(IKMAX-1) ] )*exp( imag(b[0 + IQMAX*ip]) * L[ip] )
                                             + F[ ii + 0 ]
                                            );
                 for ( int ik=1; ik<IKMAX-1; ik++ )
                 {
-                    double z = ik*parameters.L/(IKMAX-1);
+                    double z = ik*L[ip]/(IKMAX-1);
                     temp += ( F[ ii + IIMAX*ik ] )
-                            * exp( complex<double>(0., -M_2PI*q*z/parameters.L) )
+                            * exp( complex<double>(0., -M_2PI*q*z/L[ip]) )
                             * exp( imag(b[0 + IQMAX*ip]) * z );
                 }
                 A[ iq + IQMAX*ip ] = temp/( double (IKMAX-1) );
@@ -312,15 +316,15 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
                                            );
                 for ( int ik=1; ik<IKMAX-1; ik++ )
                 {
-                    double z = ik*parameters.L/(IKMAX-1);
+                    double z = ik*L[ip]/(IKMAX-1);
                     temp += ( F[ ii + IIMAX*ik ] )
-                            * exp( complex<double>(0., -M_2PI*q*z/parameters.L) );
+                            * exp( complex<double>(0., -M_2PI*q*z/L[ip]) );
                 }
                 A[ iq + IQMAX*ip ] = temp/( double (IKMAX-1) );
             }
         }
     }
-    else if ( parameters.method == "traditional" )
+    else if ( parameters.method == "traditional_resistant" )
     {
         // Eq (7) of [4] with eqs (2)-(4).
         for ( int ip=0; ip<IPMAX; ip++ )
@@ -332,15 +336,41 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
                 double q = iq-parameters.N;
 
                 complex<double> temp = 0.5*(
-                                            ( F[ ii + IIMAX*(IKMAX-1) ] )*exp( imag(b[0 + IQMAX*ip]) * parameters.L )
+                                            ( F[ ii + IIMAX*(IKMAX-1) ] )*exp( imag(b[0 + IQMAX*ip]) * L[ip] )
                                             + F[ ii + 0 ]
                                            );
                 for ( int ik=1; ik<IKMAX-1; ik++ )
                 {
-                    double z = ik*parameters.L/(IKMAX-1);
+                    double z = ik*L[ip]/(IKMAX-1);
                     temp += ( F[ ii + IIMAX*ik ] )
-                            * exp( complex<double>(0., -M_2PI*q*z/parameters.L) )
+                            * exp( complex<double>(0., -M_2PI*q*z/L[ip]) )
                             * exp( imag(b[0 + IQMAX*ip]) * z );
+                }
+                A[ iq + IQMAX*ip ] = temp/( double (IKMAX-1) );
+            }
+        }
+    }
+    else if ( parameters.method == "modified_resistant" )
+    {
+        // Eq (7) of [4] with eqs (2)-(4).
+        for ( int ip=0; ip<IPMAX; ip++ )
+        {
+            int ii = int ( floor( ip * (IIMAX-1)/(IPMAX-1) ) );
+
+            for ( int iq=0; iq<IQMAX; iq++ )
+            {
+                double q = iq-parameters.N;
+
+                complex<double> temp = 0.5*(
+                                            ( F[ ii + IIMAX*(IKMAX-1) ] )*exp( bbar[ip] * L[ip] )
+                                            + F[ ii + 0 ]
+                                           );
+                for ( int ik=1; ik<IKMAX-1; ik++ )
+                {
+                    double z = ik*L[ip]/(IKMAX-1);
+                    temp += ( F[ ii + IIMAX*ik ] )
+                            * exp( complex<double>(0., -M_2PI*q*z/L[ip]) )
+                            * exp( bbar[ip] * z );
                 }
                 A[ iq + IQMAX*ip ] = temp/( double (IKMAX-1) );
             }
@@ -462,8 +492,9 @@ void calculate_sfw_intensity_xz(InputParameters parameters, double * x0, double 
             }
         }
     }
-    else if ( parameters.method == "traditional" || parameters.method == "traditional_nonresistant" )
-    {
+    else if ( parameters.method == "traditional_resistant" || parameters.method == "traditional_nonresistant"
+             || parameters.method == "modified_resistant" )
+        {
         // Eq (6) of [4].
         for ( int iz=0; iz<parameters.zpoints; iz++ )
         {
@@ -598,7 +629,8 @@ void calculate_sfw_intensity_xy(InputParameters parameters, double * x0, double 
             }
         }
     }
-    else if ( parameters.method == "traditional" || parameters.method == "traditional_nonresistant" )
+    else if ( parameters.method == "traditional_resistant" || parameters.method == "traditional_nonresistant"
+             || parameters.method == "modified_resistant" )
     {
         // Eq (6) of [4].
         for ( int iy=0; iy<parameters.ypoints; iy++ )
@@ -731,7 +763,8 @@ void calculate_sfw_intensity_yz(InputParameters parameters, double * x0, double 
             }
         }
     }
-    else if ( parameters.method == "traditional" || parameters.method == "traditional_nonresistant" )
+    else if ( parameters.method == "traditional_resistant" || parameters.method == "traditional_nonresistant"
+             || parameters.method == "modified_resistant" )
     {
         // Eq (6) of [4].
         for ( int iz=0; iz<parameters.zpoints; iz++ )
@@ -766,7 +799,7 @@ int main( int argc, char *argv[] )
     log_information();
 
     InputParameters parameters;
-    if ( argc != 23 )
+    if ( argc != 24 )
     {
         log_wrong_parameters_amount();
         exit(1);
@@ -776,9 +809,9 @@ int main( int argc, char *argv[] )
         parameters.start_time = time(NULL);
         parameters.n = complex<double> ( atof(argv[1]), atof(argv[2]) );
         parameters.l0 = atof(argv[3]);
-        parameters.file_Qp = argv[4];
+        parameters.file_Q = argv[4];
         parameters.N  = atoi(argv[5]);
-        parameters.L  = atof(argv[6]);
+        parameters.file_L = argv[6];
         parameters.P  = atoi(argv[7]);
         parameters.slice_axis_name = argv[8];
         parameters.slice_axis_value = atof(argv[9]);
@@ -793,8 +826,9 @@ int main( int argc, char *argv[] )
         parameters.zpoints = atoi(argv[18]);
         parameters.method = argv[19];
         parameters.w0 = atof(argv[20]);
-        parameters.file_sip  = argv[21];
-        parameters.file_psi = argv[22];
+        parameters.file_bbar  = argv[21];
+        parameters.file_sip  = argv[22];
+        parameters.file_psi = argv[23];
     }
 
     log_input_parameters( parameters );
@@ -809,34 +843,40 @@ int main( int argc, char *argv[] )
     double * F = new double [ IIMAX*IKMAX ];
     mtx_read_to_array( parameters.file_sip, F );
 
-    // Resetting gaussian waist of the Bessel-Gauss beam
-    if ( parameters.method != "finite_energy" && parameters.method != "paraxial_apodized" )
-    {
-        parameters.w0 = 0;
-    }
-
     // Values for q and p indexes of FWs
     // q->[iq] : q=iq-N, 0<=iq<IQMAX
     // p->[ip] : p=ip+1, 0<=ip<IPMAX
     int IQMAX = parameters.N*2+1;
     int IPMAX = parameters.P;
 
-    // Read MTX file to parameter array Q[p]
     double * Q = new double [ IPMAX ];
-    mtx_read_to_array( parameters.file_Qp, Q );
+    mtx_read_to_array( parameters.file_Q, Q );
+
+    double * L = new double [ IPMAX ];
+    mtx_read_to_array( parameters.file_L, L );
+
+    double * bbar;
+    if ( parameters.method == "modified_resistant" )
+    {
+        bbar = new double [ IPMAX ];
+        mtx_read_to_array( parameters.file_bbar, bbar );
+    }
+
+    // Finding the maximum L of L[p]
+    double * Lmax = max_element(L, L + IPMAX);
 
     // Wave vectors
     complex<double> * b = new complex<double> [ IQMAX*IPMAX ];
     complex<double> * h = new complex<double> [ IQMAX*IPMAX ];
-    calculate_wave_vectors(parameters, b, h, Q, IQMAX, IPMAX);
+    calculate_wave_vectors(parameters, b, h, Q, L, IQMAX, IPMAX);
     
     // Coefficients A
     complex<double> * A = new complex<double> [ IQMAX*IPMAX ];
-    calculate_coefficients_A(parameters, b, h, A, Q, IQMAX, IPMAX, F, IIMAX, IKMAX);
+    calculate_coefficients_A(parameters, b, h, A, Q, L, bbar, IQMAX, IPMAX, F, IIMAX, IKMAX);
     delete[] F;
 
     // Displacement in x of each LFW relative to the origin
-    parameters.H = parameters.L * double(IIMAX)/double(IKMAX); 
+    parameters.H = (*Lmax) * double(IIMAX)/double(IKMAX); 
     double * x0 = new double [ IPMAX ];
     double * x0x0 = new double [ IPMAX ];
     calculate_displacement_x0(parameters, x0, x0x0, IPMAX);
@@ -846,9 +886,6 @@ int main( int argc, char *argv[] )
     int mtx_rows, mtx_columns;
     if ( parameters.slice_axis_name[0] == 'y' )
     {     
-        parameters.ymin = 0;
-        parameters.ymax = 0;
-        parameters.ypoints = 0;
         mtx_rows = parameters.xpoints;
         mtx_columns = parameters.zpoints;
         sfwi = new double [ mtx_rows*mtx_columns ];
@@ -856,9 +893,6 @@ int main( int argc, char *argv[] )
     }
     else if ( parameters.slice_axis_name[0] == 'z' )
     {
-        parameters.zmin = 0;
-        parameters.zmax = 0;
-        parameters.zpoints = 0;
         mtx_rows = parameters.xpoints;
         mtx_columns = parameters.ypoints;
         sfwi = new double [ mtx_rows*mtx_columns ];
@@ -866,9 +900,6 @@ int main( int argc, char *argv[] )
     }
     else if ( parameters.slice_axis_name[0] == 'x' )
     {
-        parameters.xmin = 0;
-        parameters.xmax = 0;
-        parameters.xpoints = 0;
         mtx_rows = parameters.ypoints;
         mtx_columns = parameters.zpoints;
         sfwi = new double [ mtx_rows*mtx_columns ];
@@ -883,12 +914,12 @@ int main( int argc, char *argv[] )
 
     // Write to .mtx file
     string mtx_comments;
-    mtx_comments = "nr ni l0 N L P H slice_axis_name slice_axis_value "
+    mtx_comments = "nr ni l0 N Lmax P H slice_axis_name slice_axis_value "
                     "xmin xmax xpoints ymin ymax ypoints zmin zmax zpoints "
                     "method w0 elapsed_time\n"
                     "%" + to_string(real(parameters.n)) + " " + to_string(imag(parameters.n)) + " "
                     + to_string(parameters.l0) + " "
-                    + to_string(parameters.N) + " " + to_string(parameters.L) + " "
+                    + to_string(parameters.N) + " " + to_string(*Lmax) + " "
                     + to_string(parameters.P) + " " + to_string(parameters.H) + " "
                     + parameters.slice_axis_name[0] + " " + to_string(parameters.slice_axis_value) + " "
                     + to_string(parameters.xmin) + " " + to_string(parameters.xmax) + " "
@@ -896,7 +927,7 @@ int main( int argc, char *argv[] )
                     + to_string(parameters.ymax) + " " + to_string(parameters.ypoints) + " "
                     + to_string(parameters.zmin) + " " + to_string(parameters.zmax) + " "
                     + to_string(parameters.zpoints) + " " + parameters.method + " "
-                    + to_string(parameters.w0) + to_string( time(NULL) - parameters.start_time );
+                    + to_string(parameters.w0) + " " + to_string( time(NULL) - parameters.start_time );
     mtx_write_from_array( parameters.file_psi, mtx_comments, mtx_rows, mtx_columns, sfwi );
 
     delete[] sfwi;
