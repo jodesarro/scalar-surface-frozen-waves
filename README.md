@@ -50,4 +50,4 @@ An example of usage within <a href="https://www.wolfram.com/mathematica/">Mathem
 - *modified*: method developed in chapter II of [[5](#references)];
 - *paraxial_apodized*: method developed in chapter III of [[5](#references)];
 - *finite_energy*: method developed in chapter IV of [[5](#references)];
-- *modified_resistant*: a modified version of the *traditional_resistant* method where one can compensate the losses by means of the parameter &#x035E;&#946;.
+- *modified_resistant*: a modified version of the *traditional_resistant* method where one can compensate the losses by means of the parameter *&#946;&#x035E;&#946;*<sub>*p*</sub>.
