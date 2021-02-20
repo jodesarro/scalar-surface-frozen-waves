@@ -41,7 +41,7 @@ struct InputParameters
     string file_Q;
     int N;
     string file_L;
-    double H;
+    double dx0;
     int P;
     char* slice_axis_name = new char[1];
     double slice_axis_value, xmin, xmax, ymin, ymax, zmin, zmax;
@@ -56,7 +56,7 @@ void log_information()
 {
     puts("\n| SCALAR-SURFACE-FROZEN-WAVES | 27 DEZ 2020 | @JODESARRO |\n");
     puts("DESCRIPTION");
-    puts("A C++ routine to evaluate the intensity of scalar zeroth order "
+    puts("A C++ routine to evaluate the scalar field of zeroth order "
          "surface frozen waves. Documentation and latest release available "
          "on 'https://github.com/jodesarro/scalar-surface-frozen-waves'.\n");
 }
@@ -79,6 +79,7 @@ void log_input_parameters( InputParameters parameters )
     cout << "N = " << parameters.N << endl;
     cout << "file_L = " << parameters.file_L << endl;
     cout << "P = " << parameters.P << endl;
+    cout << "dx0 = " << parameters.dx0 << endl;
     cout << "slice_axis_name = " << parameters.slice_axis_name[0] << endl;
     cout << "slice_axis_value = " << parameters.slice_axis_value << endl;
     cout << "xmin = " << parameters.xmin << endl;
@@ -114,7 +115,7 @@ void calculate_wave_vectors( InputParameters parameters, complex<double> * b,
     //  q->[iq] : q = iq - N, 0 <= iq < IQMAX, and
     //  p->[ip] : p = ip + 1, 0 <= ip < IPMAX.
 
-    if ( parameters.method == "finite_energy" )
+    if ( parameters.method == "realh_resistant_besselgauss_nonperiodic" )
     {
         // Eqs (16)-(18) of [5].
         for ( int ip=0; ip<IPMAX; ip++ )
@@ -132,7 +133,7 @@ void calculate_wave_vectors( InputParameters parameters, complex<double> * b,
             }
         }
     }
-    if ( parameters.method == "paraxial_apodized" )
+    if ( parameters.method == "realh_resistant_besselgauss" )
     {
         // Eqs (16)-(18) of [5].
         for ( int ip=0; ip<IPMAX; ip++ )
@@ -150,7 +151,7 @@ void calculate_wave_vectors( InputParameters parameters, complex<double> * b,
             }
         }
     }
-    else if ( parameters.method == "modified" )
+    else if ( parameters.method == "realh_resistant" )
     {
         // Eqs (4)-(5) of [5].
         for ( int ip=0; ip<IPMAX; ip++ )
@@ -171,8 +172,8 @@ void calculate_wave_vectors( InputParameters parameters, complex<double> * b,
             }
         }
     }
-    else if ( parameters.method == "traditional_resistant" || parameters.method == "traditional_nonresistant"
-             || parameters.method == "modified_resistant" )
+    else if ( parameters.method == "complexh_resistant" || parameters.method == "complexh_nonresistant"
+             || parameters.method == "complexh_resistant_besselgauss" )
     {
         // Eqs (2)-(4) of [4].
         for ( int ip=0; ip<IPMAX; ip++ )
@@ -202,7 +203,7 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
     // Also, ii is a variable that relates the transversal pixels of the SIP with
     //  a number P of LFW once the transversal index is [ii] for F and [ip] for A.
 
-    if ( parameters.method == "finite_energy" )
+    if ( parameters.method == "realh_resistant_besselgauss_nonperiodic" )
     {
         // Chapter IV of [5], eq (29) with eqs (16)-(18) and (30).
         complex<double> k = M_2PI*parameters.n/parameters.l0;
@@ -242,7 +243,7 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
             }
         }
     }
-    else if ( parameters.method == "paraxial_apodized" )
+    else if ( parameters.method == "realh_resistant_besselgauss" )
     {
         // Chapter III of [5], eq (6) with eqs (16)-(18).
         complex<double> k = M_2PI*parameters.n/parameters.l0;
@@ -271,7 +272,7 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
             }
         }
     }
-    else if ( parameters.method == "modified" )
+    else if ( parameters.method == "realh_resistant" )
     {
         // Chapter II of [5], eq (6) with eqs (4) and (5).
         double k0k0 = ( M_2PI / parameters.l0 ) * ( M_2PI / parameters.l0 );
@@ -299,7 +300,7 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
             }
         }
     }
-    else if ( parameters.method == "traditional_nonresistant" )
+    else if ( parameters.method == "complexh_nonresistant" )
     {
         // See [3] for what I call a nonresistant SFW.
         // Eq (7) of [4] with eqs (2)-(4).
@@ -324,7 +325,7 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
             }
         }
     }
-    else if ( parameters.method == "traditional_resistant" )
+    else if ( parameters.method == "complexh_resistant" )
     {
         // Eq (7) of [4] with eqs (2)-(4).
         for ( int ip=0; ip<IPMAX; ip++ )
@@ -350,7 +351,7 @@ void calculate_coefficients_A( InputParameters parameters, complex<double> * b, 
             }
         }
     }
-    else if ( parameters.method == "modified_resistant" )
+    else if ( parameters.method == "complexh_resistant_besselgauss" )
     {
         // Eq (7) of [4] with eqs (2)-(4).
         for ( int ip=0; ip<IPMAX; ip++ )
@@ -382,21 +383,20 @@ void calculate_displacement_x0(InputParameters parameters, double * x0, double *
 {
     for ( int ip=0; ip<IPMAX; ip++ )
     {
-        // Linear and homogeneous distribution in x according to P and H
-        x0[ip] = ( double(ip) )*parameters.H/( double(IPMAX) );
+        x0[ip] = double(ip) * parameters.dx0;
         x0x0[ip] = x0[ip]*x0[ip];
     }
 }
 
-void calculate_sfw_intensity_xz(InputParameters parameters, double * x0, double * x0x0,
+void calculate_sfw_psi_xz(InputParameters parameters, double * x0, double * x0x0,
                                 complex<double> * b, complex<double> * h,
-                                complex<double> * A, int IQMAX, int IPMAX, double * sfwi)
+                                complex<double> * A, int IQMAX, int IPMAX, complex<double> * sfwi)
 {
     double dx = (parameters.xmax-parameters.xmin)/( double(parameters.xpoints) );
     double dz = (parameters.zmax-parameters.zmin)/( double(parameters.zpoints) );
     double yy = parameters.slice_axis_value*parameters.slice_axis_value;
 
-    if ( parameters.method == "finite_energy" )
+    if ( parameters.method == "realh_resistant_besselgauss_nonperiodic" )
     {
         // Eq (20) of [5].
         complex<double> k = M_2PI*parameters.n/parameters.l0;
@@ -426,11 +426,11 @@ void calculate_sfw_intensity_xz(InputParameters parameters, double * x0, double 
                             * exp(-z_times_i*k/mu);
                 }
                 temp *= exp(z_times_i*k);
-                sfwi[ix + parameters.xpoints*iz] = abs(temp)*abs(temp);
+                sfwi[ix + parameters.xpoints*iz] = temp;
             }
         }
     }
-    else if ( parameters.method == "paraxial_apodized" )
+    else if ( parameters.method == "realh_resistant_besselgauss" )
     {
         // Eq (20) of [5].
         complex<double> k = M_2PI*parameters.n/parameters.l0;
@@ -460,11 +460,11 @@ void calculate_sfw_intensity_xz(InputParameters parameters, double * x0, double 
                             * exp(-z_times_i*k/mu);
                 }
                 temp *= exp(z_times_i*k);
-                sfwi[ix + parameters.xpoints*iz] = abs(temp)*abs(temp);
+                sfwi[ix + parameters.xpoints*iz] = temp;
             }
         }
     }
-    else if ( parameters.method == "modified" )
+    else if ( parameters.method == "realh_resistant" )
     {
         // Eq (1) of [5].
         for ( int iz=0; iz<parameters.zpoints; iz++ )
@@ -488,12 +488,12 @@ void calculate_sfw_intensity_xz(InputParameters parameters, double * x0, double 
                                 * exp( b[iq + IQMAX*ip]*z_times_i );
                     }
                 }
-                sfwi[ix + parameters.xpoints*iz] = abs(temp)*abs(temp);
+                sfwi[ix + parameters.xpoints*iz] = temp;
             }
         }
     }
-    else if ( parameters.method == "traditional_resistant" || parameters.method == "traditional_nonresistant"
-             || parameters.method == "modified_resistant" )
+    else if ( parameters.method == "complexh_resistant" || parameters.method == "complexh_nonresistant"
+             || parameters.method == "complexh_resistant_besselgauss" )
         {
         // Eq (6) of [4].
         for ( int iz=0; iz<parameters.zpoints; iz++ )
@@ -517,22 +517,22 @@ void calculate_sfw_intensity_xz(InputParameters parameters, double * x0, double 
                                 * exp( b[iq + IQMAX*ip]*z_times_i );
                     }
                 }
-                sfwi[ix + parameters.xpoints*iz] = abs(temp)*abs(temp);
+                sfwi[ix + parameters.xpoints*iz] = temp;
             }
         }
     }
 }
 
-void calculate_sfw_intensity_xy(InputParameters parameters, double * x0, double * x0x0,
+void calculate_sfw_psi_xy(InputParameters parameters, double * x0, double * x0x0,
                                 complex<double> * b, complex<double> * h,
-                                complex<double> * A, int IQMAX, int IPMAX, double * sfwi)
+                                complex<double> * A, int IQMAX, int IPMAX, complex<double> * sfwi)
 {
     double dx = (parameters.xmax-parameters.xmin)/( double(parameters.xpoints) );
     double dy = (parameters.ymax-parameters.ymin)/( double(parameters.ypoints) );
     double z = parameters.slice_axis_value;
     complex<double> z_times_i = complex<double> (0., z);
 
-    if ( parameters.method == "finite_energy" )
+    if ( parameters.method == "realh_resistant_besselgauss_nonperiodic" )
     {
         // Eq (20) of [5].
         complex<double> k = M_2PI*parameters.n/parameters.l0;
@@ -562,11 +562,11 @@ void calculate_sfw_intensity_xy(InputParameters parameters, double * x0, double 
                             * exp(-z_times_i*k/mu);
                 }
                 temp *= exp(z_times_i*k);
-                sfwi[ix + parameters.xpoints*iy] = abs(temp)*abs(temp);
+                sfwi[ix + parameters.xpoints*iy] = temp;
             }
         }
     }
-    else if ( parameters.method == "paraxial_apodized" )
+    else if ( parameters.method == "realh_resistant_besselgauss" )
     {
         // Eq (20) of [5].
         complex<double> k = M_2PI*parameters.n/parameters.l0;
@@ -596,11 +596,11 @@ void calculate_sfw_intensity_xy(InputParameters parameters, double * x0, double 
                             * exp(-z_times_i*k/mu);
                 }
                 temp *= exp(z_times_i*k);
-                sfwi[ix + parameters.xpoints*iy] = abs(temp)*abs(temp);
+                sfwi[ix + parameters.xpoints*iy] = temp;
             }
         }
     }
-    else if ( parameters.method == "modified" )
+    else if ( parameters.method == "realh_resistant" )
     {
         // Eq (1) of [5].
         for ( int iy=0; iy<parameters.ypoints; iy++ )
@@ -625,12 +625,12 @@ void calculate_sfw_intensity_xy(InputParameters parameters, double * x0, double 
                                 * exp( b[iq + IQMAX*ip]*z_times_i );
                     }
                 }
-                sfwi[ix + parameters.xpoints*iy] = abs(temp)*abs(temp);
+                sfwi[ix + parameters.xpoints*iy] = temp;
             }
         }
     }
-    else if ( parameters.method == "traditional_resistant" || parameters.method == "traditional_nonresistant"
-             || parameters.method == "modified_resistant" )
+    else if ( parameters.method == "complexh_resistant" || parameters.method == "complexh_nonresistant"
+             || parameters.method == "complexh_resistant_besselgauss" )
     {
         // Eq (6) of [4].
         for ( int iy=0; iy<parameters.ypoints; iy++ )
@@ -655,22 +655,22 @@ void calculate_sfw_intensity_xy(InputParameters parameters, double * x0, double 
                                 * exp( b[iq + IQMAX*ip]*z_times_i );
                     }
                 }
-                sfwi[ix + parameters.xpoints*iy] = abs(temp)*abs(temp);
+                sfwi[ix + parameters.xpoints*iy] = temp;
             }
         }
     }
 }
 
-void calculate_sfw_intensity_yz(InputParameters parameters, double * x0, double * x0x0,
+void calculate_sfw_psi_yz(InputParameters parameters, double * x0, double * x0x0,
                                 complex<double> * b, complex<double> * h,
-                                complex<double> * A, int IQMAX, int IPMAX, double * sfwi)
+                                complex<double> * A, int IQMAX, int IPMAX, complex<double> * sfwi)
 {
     double dy = (parameters.ymax-parameters.ymin)/( double(parameters.ypoints) );
     double dz = (parameters.zmax-parameters.zmin)/( double(parameters.zpoints) );
     double xx = parameters.slice_axis_value*parameters.slice_axis_value;
     double rho_2_cosphi = 2.0*parameters.slice_axis_value;
 
-    if ( parameters.method == "finite_energy" )
+    if ( parameters.method == "realh_resistant_besselgauss_nonperiodic" )
     {
         // Eq (20) of [5].
         complex<double> k = M_2PI*parameters.n/parameters.l0;
@@ -699,11 +699,11 @@ void calculate_sfw_intensity_yz(InputParameters parameters, double * x0, double 
                             * exp(-z_times_i*k/mu);
                 }
                 temp *= exp(z_times_i*k);
-                sfwi[iy + parameters.ypoints*iz] = abs(temp)*abs(temp);
+                sfwi[iy + parameters.ypoints*iz] = temp;
             }
         }
     }
-    else if ( parameters.method == "paraxial_apodized" )
+    else if ( parameters.method == "realh_resistant_besselgauss" )
     {
         // Eq (20) of [5].
         complex<double> k = M_2PI*parameters.n/parameters.l0;
@@ -732,11 +732,11 @@ void calculate_sfw_intensity_yz(InputParameters parameters, double * x0, double 
                             * exp(-z_times_i*k/mu);
                 }
                 temp *= exp(z_times_i*k);
-                sfwi[iy + parameters.ypoints*iz] = abs(temp)*abs(temp);
+                sfwi[iy + parameters.ypoints*iz] = temp;
             }
         }
     }
-    else if ( parameters.method == "modified" )
+    else if ( parameters.method == "realh_resistant" )
     {
         // Eq (1) of [5].
         for ( int iz=0; iz<parameters.zpoints; iz++ )
@@ -759,12 +759,12 @@ void calculate_sfw_intensity_yz(InputParameters parameters, double * x0, double 
                                 * exp( b[iq + IQMAX*ip]*z_times_i );
                     }
                 }
-                sfwi[iy + parameters.ypoints*iz] = abs(temp)*abs(temp);
+                sfwi[iy + parameters.ypoints*iz] = temp;
             }
         }
     }
-    else if ( parameters.method == "traditional_resistant" || parameters.method == "traditional_nonresistant"
-             || parameters.method == "modified_resistant" )
+    else if ( parameters.method == "complexh_resistant" || parameters.method == "complexh_nonresistant"
+             || parameters.method == "complexh_resistant_besselgauss" )
     {
         // Eq (6) of [4].
         for ( int iz=0; iz<parameters.zpoints; iz++ )
@@ -787,7 +787,7 @@ void calculate_sfw_intensity_yz(InputParameters parameters, double * x0, double 
                                 * exp( b[iq + IQMAX*ip]*z_times_i );
                     }
                 }
-                sfwi[iy + parameters.ypoints*iz] = abs(temp)*abs(temp);
+                sfwi[iy + parameters.ypoints*iz] = temp;
             }
         }
     }
@@ -799,7 +799,7 @@ int main( int argc, char *argv[] )
     log_information();
 
     InputParameters parameters;
-    if ( argc != 24 )
+    if ( argc != 25 )
     {
         log_wrong_parameters_amount();
         exit(1);
@@ -813,22 +813,23 @@ int main( int argc, char *argv[] )
         parameters.N  = atoi(argv[5]);
         parameters.file_L = argv[6];
         parameters.P  = atoi(argv[7]);
-        parameters.slice_axis_name = argv[8];
-        parameters.slice_axis_value = atof(argv[9]);
-        parameters.xmin = atof(argv[10]);
-        parameters.xmax = atof(argv[11]);
-        parameters.xpoints = atoi(argv[12]);
-        parameters.ymin = atof(argv[13]);
-        parameters.ymax = atof(argv[14]);
-        parameters.ypoints = atoi(argv[15]);
-        parameters.zmin = atof(argv[16]);
-        parameters.zmax = atof(argv[17]);
-        parameters.zpoints = atoi(argv[18]);
-        parameters.method = argv[19];
-        parameters.w0 = atof(argv[20]);
-        parameters.file_bbar  = argv[21];
-        parameters.file_sip  = argv[22];
-        parameters.file_psi = argv[23];
+        parameters.dx0 = atof(argv[8]);
+        parameters.slice_axis_name = argv[9];
+        parameters.slice_axis_value = atof(argv[10]);
+        parameters.xmin = atof(argv[11]);
+        parameters.xmax = atof(argv[12]);
+        parameters.xpoints = atoi(argv[13]);
+        parameters.ymin = atof(argv[14]);
+        parameters.ymax = atof(argv[15]);
+        parameters.ypoints = atoi(argv[16]);
+        parameters.zmin = atof(argv[17]);
+        parameters.zmax = atof(argv[18]);
+        parameters.zpoints = atoi(argv[19]);
+        parameters.method = argv[20];
+        parameters.w0 = atof(argv[21]);
+        parameters.file_bbar  = argv[22];
+        parameters.file_sip  = argv[23];
+        parameters.file_psi = argv[24];
     }
 
     log_input_parameters( parameters );
@@ -856,14 +857,11 @@ int main( int argc, char *argv[] )
     mtx_read_to_array( parameters.file_L, L );
 
     double * bbar;
-    if ( parameters.method == "modified_resistant" )
+    if ( parameters.method == "complexh_resistant_besselgauss" )
     {
         bbar = new double [ IPMAX ];
         mtx_read_to_array( parameters.file_bbar, bbar );
     }
-
-    // Finding the maximum L of L[p]
-    double * Lmax = max_element(L, L + IPMAX);
 
     // Wave vectors
     complex<double> * b = new complex<double> [ IQMAX*IPMAX ];
@@ -876,51 +874,50 @@ int main( int argc, char *argv[] )
     delete[] F;
 
     // Displacement in x of each LFW relative to the origin
-    parameters.H = (*Lmax) * double(IIMAX)/double(IKMAX); 
     double * x0 = new double [ IPMAX ];
     double * x0x0 = new double [ IPMAX ];
     calculate_displacement_x0(parameters, x0, x0x0, IPMAX);
 
-    // Intensity of SFW
-    double * sfwi;
+    // Psi of SFW
+    complex<double> * sfwi;
     int mtx_rows, mtx_columns;
     if ( parameters.slice_axis_name[0] == 'y' )
     {     
         mtx_rows = parameters.xpoints;
         mtx_columns = parameters.zpoints;
-        sfwi = new double [ mtx_rows*mtx_columns ];
-        calculate_sfw_intensity_xz(parameters, x0, x0x0, b, h, A, IQMAX, IPMAX, sfwi);
+        sfwi = new complex<double> [ mtx_rows*mtx_columns ];
+        calculate_sfw_psi_xz(parameters, x0, x0x0, b, h, A, IQMAX, IPMAX, sfwi);
     }
     else if ( parameters.slice_axis_name[0] == 'z' )
     {
         mtx_rows = parameters.xpoints;
         mtx_columns = parameters.ypoints;
-        sfwi = new double [ mtx_rows*mtx_columns ];
-        calculate_sfw_intensity_xy(parameters, x0, x0x0, b, h, A, IQMAX, IPMAX, sfwi);
+        sfwi = new complex<double> [ mtx_rows*mtx_columns ];
+        calculate_sfw_psi_xy(parameters, x0, x0x0, b, h, A, IQMAX, IPMAX, sfwi);
     }
     else if ( parameters.slice_axis_name[0] == 'x' )
     {
         mtx_rows = parameters.ypoints;
         mtx_columns = parameters.zpoints;
-        sfwi = new double [ mtx_rows*mtx_columns ];
-        calculate_sfw_intensity_yz(parameters, x0, x0x0, b, h, A, IQMAX, IPMAX, sfwi);
+        sfwi = new complex<double> [ mtx_rows*mtx_columns ];
+        calculate_sfw_psi_yz(parameters, x0, x0x0, b, h, A, IQMAX, IPMAX, sfwi);
     }
     
-    delete[] A;
     delete[] x0;
     delete[] x0x0;
     delete[] b;
     delete[] h;
+    delete[] A;
 
     // Write to .mtx file
     string mtx_comments;
-    mtx_comments = "nr ni l0 N Lmax P H slice_axis_name slice_axis_value "
+    mtx_comments = "nr ni l0 N P dx0 slice_axis_name slice_axis_value "
                     "xmin xmax xpoints ymin ymax ypoints zmin zmax zpoints "
                     "method w0 elapsed_time\n"
                     "%" + to_string(real(parameters.n)) + " " + to_string(imag(parameters.n)) + " "
                     + to_string(parameters.l0) + " "
-                    + to_string(parameters.N) + " " + to_string(*Lmax) + " "
-                    + to_string(parameters.P) + " " + to_string(parameters.H) + " "
+                    + to_string(parameters.N) + " "
+                    + to_string(parameters.P) + " " + to_string(parameters.dx0) + " "
                     + parameters.slice_axis_name[0] + " " + to_string(parameters.slice_axis_value) + " "
                     + to_string(parameters.xmin) + " " + to_string(parameters.xmax) + " "
                     + to_string(parameters.xpoints) + " " + to_string(parameters.ymin) + " "
@@ -928,7 +925,7 @@ int main( int argc, char *argv[] )
                     + to_string(parameters.zmin) + " " + to_string(parameters.zmax) + " "
                     + to_string(parameters.zpoints) + " " + parameters.method + " "
                     + to_string(parameters.w0) + " " + to_string( time(NULL) - parameters.start_time );
-    mtx_write_from_array( parameters.file_psi, mtx_comments, mtx_rows, mtx_columns, sfwi );
+    mtx_write_from_complex_array( parameters.file_psi, mtx_comments, mtx_rows, mtx_columns, sfwi );
 
     delete[] sfwi;
     
