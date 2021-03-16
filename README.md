@@ -1,5 +1,5 @@
 # Scalar surface frozen waves
-A C++ routine to evaluate the intensity of scalar zeroth order surface frozen waves (SFWs) [[1-5](#references)].
+A C++ routine to evaluate the intensity of scalar zeroth order surface frozen waves (SFWs) [[1-4](#references)].
 
 The ordinary scalar SFW, composed by linear frozen waves (LFWs), posses height and length proportional to the desired superficial intensity pattern (SIP).
 The LFWs are equally spaced, with the same parameters *N* but distincts *Q*<sub>*p*</sub> and *L*<sub>*p*</sub>.
@@ -25,9 +25,9 @@ After compiling, the program must be executed with the following parameters pass
 - ***zmin***: minimum *z* to be calculated (it will be ignored if *slice_axis_name* = *z*);
 - ***zmax***: maximum *z* to be calculated (it will be ignored if *slice_axis_name* = *z*);
 - ***zpoints***: number of points in *z* (it will be ignored if *slice_axis_name* = *z*);
-- ***method***: the generation method. A list containing all the methods is available in [[6](#references)]; 
-- ***w0***: the gaussian waist for the *method*s *finite_energy* and *paraxial_apodized* (it will be ignored for any other *method*);
-- ***file_bbar***: file path in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a> to the *&#946;&#x035E;*<sub>*p*</sub> parameter responsible to compensate the losses for the method *modified_resistant* (it will be ignored for any other *method*);
+- ***method***: the generation method. A list containing all the methods is available in [[5](#references)]; 
+- ***w0***: the gaussian waist for the *method*s *finite_energy* and *paraxial_apodized* (set to 0 because it will be ignored in this version);
+- ***file_bbar***: file path in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a> to the *&#946;&#x035E;*<sub>*p*</sub> parameter responsible to compensate the losses for the method *modified_resistant* (set to 0 because it will be ignored in this version);;
 - ***file_sip***: file path to the SIP *F*(*x*<sub>*p*</sub>,*z*) in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a>;
 - ***file_psi***: file path to save the intensity |*Ψ*(*x*,*y*,*z*)|² in <a href="https://math.nist.gov/MatrixMarket/formats.html">MTX</a>;
 
@@ -42,12 +42,6 @@ An example of usage within <a href="https://www.wolfram.com/mathematica/">Mathem
 
 [4]<a href="https://doi.org/10.1364/OE.14.001804"> M. Zamboni-Rached, “Diffraction-Attenuation resistant beams in absorbing media,” Opt. Express, vol. 14, no. 5, pp. 1804–1809, Mar. 2006.</a>
 
-[5]<a href="https://doi.org/10.1103/PhysRevA.92.043839"> M. Zamboni-Rached and M. Mojahedi, “Shaping finite-energy diffraction- and attenuation-resistant beams through Bessel-Gauss–beam superposition,” Phys. Rev. A, vol. 92, no. 4, p. 043839, Oct. 2015.</a>
-
-[6] List of the *method*s:
+[5] List of the *method*s:
 - *traditional_resistant*: a traditional SFW that appears in [[1-4](#references)];
 - *traditional_nonresistant*: a non-resistant version of the traditional SFW as described in section 3.A of [[1](#references)];
-- *modified*: method developed in chapter II of [[5](#references)];
-- *paraxial_apodized*: method developed in chapter III of [[5](#references)];
-- *finite_energy*: method developed in chapter IV of [[5](#references)];
-- *modified_resistant*: a modified version of the *traditional_resistant* method where one can compensate the losses by means of the parameter *&#946;&#x035E;*<sub>*p*</sub>.
