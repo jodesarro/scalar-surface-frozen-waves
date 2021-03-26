@@ -13,9 +13,9 @@ Before compiling, one may change the following variables inside ```int main()```
 - ```double pm.l0```: wavelength in vacuum;
 - ```double pm.N```: number related to Bessel beams, resulting in a total of 2*N*+1 Bessel beams;
 - ```double pm.P```: number of LFWs;
-- ```double * L```: parameter *L*<sub>*p*</sub>;
-- ```double * Q```: parameter *Q*<sub>*p*</sub>;
-- ```double * w```: parameter *w*<sub>*p*</sub> related to Gaussian waist for each LFW for ```pm.method=="finite_energy"``` (it will be ignored for any other method);
+- ```double * pm.L```: parameter *L*<sub>*p*</sub>;
+- ```double * pm.Q```: parameter *Q*<sub>*p*</sub>;
+- ```double * pm.w```: parameter *w*<sub>*p*</sub> related to Gaussian waist for each LFW for ```pm.method=="finite_energy"``` (it will be ignored for any other method);
 - ```double pm.dx0```: separation in *x* between two consecutives LFWs;
 - ```double * pm.x0```: displacement in *x* of the LFWs;
 - ```double pm.xmin```: minimum *x* to be calculated;
