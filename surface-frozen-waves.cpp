@@ -8,12 +8,9 @@
 //  beams through Bessel-Gauss–beam superposition," Phys. Rev. A, vol. 92, no. 4, p. 043839, Oct. 2015.
 
 #include <iostream>
-#include <string>
 #include <complex>
-#include <cmath>
 #include <iomanip>
 #include <ctime>
-#include <cstdlib>
 #include <regex>
 #include <future>
 #include <vector>
@@ -55,7 +52,7 @@ struct Parameters
 
 void log_information()
 {
-    puts("| SURFACE-FROZEN-WAVES | 23 MAR 2021 | @JODESARRO |\n");
+    puts("| SURFACE-FROZEN-WAVES | 25 MAR 2021 | @JODESARRO |\n");
     puts("DESCRIPTION");
     puts("A C++ routine to evaluate the fields of zeroth order "
          "surface frozen waves. Documentation and latest release available "
@@ -126,20 +123,21 @@ void log_parameters( Parameters pm, int IQMAX, int IPMAX, ostream& stream )
     stream << "zpoints = " << pm.zpoints << endl;
 
     stream << endl;
-
 }
 
 void log_progress( )
 {
     puts("PROGRESS");
-    puts("Calculating the field...");
+    puts("Calculating the fields...");
 }
 
-void calculate_wave_numbers( Parameters pm, int IQMAX, int IPMAX, complex<double> * h, complex<double> * b )
+void calculate_wave_numbers( Parameters pm,
+                                int IQMAX, int IPMAX,
+                                complex<double> * h, complex<double> * b )
 {
-    // As always in the code,
-    //  q->[iq] : q = iq - N, 0 <= iq < IQMAX, and
-    //  p->[ip] : p = ip + 1, 0 <= ip < IPMAX.
+    // Just to remember:
+    //  q->[iq] : q=iq-N, 0<=iq<IQMAX
+    //  p->[ip] : p=ip+1, 0<=ip<IPMAX
 
     if ( pm.method == "finite_energy" )
     {
@@ -149,13 +147,13 @@ void calculate_wave_numbers( Parameters pm, int IQMAX, int IPMAX, complex<double
             for ( int iq=0; iq<IQMAX; iq++ )
             {
                 double q = double( iq - pm.N );
-                double betaqp_r = pm.Q[ip] + M_2PI*q/pm.L[ip];
+                double bqp_r = pm.Q[ip] + M_2PI*q/pm.L[ip];
                 b[iq + IQMAX*ip] = complex<double> (
-                                                        betaqp_r,
-                                                        imag(pm.k) * ( double(2) - betaqp_r/real(pm.k) )
+                                                    bqp_r,
+                                                    imag(pm.k)*( double(2) - bqp_r/real(pm.k) )
                                                    );
                 h[iq + IQMAX*ip] = M_SQRT2
-                                    * sqrt( double(1) - betaqp_r/real(pm.k) )
+                                    * sqrt( double(1) - bqp_r/real(pm.k) )
                                     * abs(pm.k);
             }
         }
@@ -169,16 +167,15 @@ void calculate_wave_numbers( Parameters pm, int IQMAX, int IPMAX, complex<double
             for ( int iq=0; iq<IQMAX; iq++ )
             {
                 double q = double( iq - pm.N );
-                double betaqp_r = pm.Q[ip] + M_2PI*q/pm.L[ip];
+                double bqp_r = pm.Q[ip] + M_2PI*q/pm.L[ip];
                 b[iq + IQMAX*ip] = complex<double> (
-                                                    betaqp_r,
-                                                    k0k0*pm.nr*pm.ni / betaqp_r
+                                                    bqp_r,
+                                                    k0k0*pm.nr*pm.ni / bqp_r
                                                    );
                 h[iq + IQMAX*ip] = sqrt(
-                                            ( pm.nr*pm.nr - pm.ni*pm.ni )*k0k0
-                                            - ( betaqp_r * betaqp_r )
-                                            + ( k0k0*pm.nr*pm.ni / betaqp_r )
-                                            * ( k0k0*pm.nr*pm.ni / betaqp_r )
+                                        ( pm.nr*pm.nr - pm.ni*pm.ni )*k0k0
+                                        - ( bqp_r * bqp_r )
+                                        + ( k0k0*pm.nr*pm.ni/bqp_r )*( k0k0*pm.nr*pm.ni/bqp_r )
                                        );
             }
         }
@@ -192,26 +189,28 @@ void calculate_wave_numbers( Parameters pm, int IQMAX, int IPMAX, complex<double
             for ( int iq=0; iq<IQMAX; iq++ )
             {
                 double q = double( iq - pm.N );
-                double betaqp_r = pm.Q[ip] + M_2PI*q/pm.L[ip];
+                double bqp_r = pm.Q[ip] + M_2PI*q/pm.L[ip];
                 b[iq + IQMAX*ip] = complex<double> (
-                                                        betaqp_r,
-                                                        betaqp_r * pm.ni/pm.nr
+                                                    bqp_r,
+                                                    bqp_r * pm.ni/pm.nr
                                                    );
                 h[iq + IQMAX*ip] = sqrt(
-                                            kk - b[iq + IQMAX*ip] * b[iq + IQMAX*ip]
+                                        kk - b[iq + IQMAX*ip]*b[iq + IQMAX*ip]
                                        );
             }
         }
     }
 }
 
-void calculate_coefficients_A( Parameters pm, complex<double> * h, complex<double> * b, int IQMAX, int IPMAX, double * F, int IIMAX, int IKMAX, complex<double> * A )
+void calculate_coefficients_A( Parameters pm, complex<double> * h, complex<double> * b,
+                                int IQMAX, int IPMAX, double * F, int IIMAX, int IKMAX,
+                                complex<double> * A )
 {
     // The following is an approximation of the A_qp integral by trapezoidal method
     //  for equally spaced z. It contains an iteration in ik that represents pixels in z.
     //  Each ik is associated to a point in z.
     // Also, ii is a variable that relates the transversal pixels of the SIP with
-    //  a number P of LFW once the transversal index is [ii] for F and [ip] for A.
+    //  a number P of LFW once the transversal index is [ii] for F but [ip] for A.
 
     if ( pm.method == "finite_energy" )
     {
@@ -221,18 +220,17 @@ void calculate_coefficients_A( Parameters pm, complex<double> * h, complex<doubl
         for ( int ip=0; ip<IPMAX; ip++ )
         {
             int ii = int ( floor( ( double(ip) ) * ( double(IIMAX-1) )/( double(IPMAX-1) ) ) );
-            double wwp = pm.w[ip]*pm.w[ip];
+            double ww = pm.w[ip]*pm.w[ip];
             complex<double> h0h0 = h[pm.N + IQMAX*ip] * h[pm.N + IQMAX*ip];
             complex<double> G0 = double(1);
             complex<double> GL = exp(   - imag(pm.k)*pm.L[ip]
-                                        - h0h0 * pm.L[ip]*pm.L[ip]
-                                        / ( wwp * kk_r )
+                                        - h0h0*pm.L[ip]*pm.L[ip]/( ww*kk_r )
                                      );
 
             for ( int iq=0; iq<IQMAX; iq++ )
             {
                 double q = double( iq - pm.N );
-                complex<double> temp = (
+                complex<double> aux = (
                                             F[ ii + IIMAX*(IKMAX-1) ]/GL
                                             + F[ ii + 0 ]/G0
                                         )/( double(2) );
@@ -240,71 +238,55 @@ void calculate_coefficients_A( Parameters pm, complex<double> * h, complex<doubl
                 {
                     double z = ( double(ik) ) * pm.L[ip] / ( double(IKMAX-1) );
                     complex<double> Gz = exp( - imag(pm.k)*z
-                                              - h0h0 * z*z
-                                              / ( wwp * kk_r )
+                                              - h0h0*z*z/( ww*kk_r )
                                              );
 
-                    temp += ( F[ ii + IIMAX*ik ]/Gz )
+                    aux += ( F[ ii + IIMAX*ik ]/Gz )
                             * exp( complex<double>(0, -M_2PI*q*z/pm.L[ip]) );
                 }
-                A[ iq + IQMAX*ip ] = temp/( double(IKMAX-1) );
+                A[ iq + IQMAX*ip ] = aux/( double(IKMAX-1) );
             }
         }
     }
-    else if ( pm.method == "nonresistant" )
+    else if ( pm.method == "nonresistant" || pm.method == "resistant" || pm.method == "resistant_realh" )
     {
-        // See [3] or section 3.A of [1] for what I call a nonresistant SFW.
         // Eq (4) of [1].
+    
         for ( int ip=0; ip<IPMAX; ip++ )
         {
             int ii = int ( floor( ( double(ip) ) * ( double(IIMAX-1) )/( double(IPMAX-1) ) ) );
 
-            for ( int iq=0; iq<IQMAX; iq++ )
-            {
-                double q = double( iq - pm.N );
-                complex<double> temp = (
-                                            F[ ii + IIMAX*(IKMAX-1) ]
-                                            + F[ ii + 0 ]
-                                       )/( double(2) );
-                for ( int ik=1; ik<IKMAX-1; ik++ )
-                {
-                    double z = ( double(ik) ) * pm.L[ip] / ( double(IKMAX-1) );
-                    temp += ( F[ ii + IIMAX*ik ] )
-                            * exp( complex<double>(0, -M_2PI*q*z/pm.L[ip]) );
-                }
-                A[ iq + IQMAX*ip ] = temp/( double(IKMAX-1) );
-            }
-        }
-    }
-    else if ( pm.method == "resistant" || pm.method == "resistant_realh" )
-    {
-        // Eq (4) of [1].
-        for ( int ip=0; ip<IPMAX; ip++ )
-        {
-            int ii = int ( floor( ( double(ip) ) * ( double(IIMAX-1) )/( double(IPMAX-1) ) ) );
+            // See [3] or section 3.A of [1] for what I call a nonresistant SFW.
             double beta0_i = imag(b[pm.N + IQMAX*ip]);
+            if ( pm.method == "nonresistant" )
+            {
+                beta0_i = 0.;
+            }
 
             for ( int iq=0; iq<IQMAX; iq++ )
             {
                 double q = double( iq - pm.N );
-                complex<double> temp = (
+                complex<double> aux = (
                                             ( F[ ii + IIMAX*(IKMAX-1) ] )*exp( beta0_i * pm.L[ip] )
                                             + F[ ii + 0 ]
                                         )/( double(2) );
                 for ( int ik=1; ik<IKMAX-1; ik++ )
                 {
                     double z = ( double(ik) ) * pm.L[ip] / ( double(IKMAX-1) );
-                    temp += ( F[ ii + IIMAX*ik ] )
+                    aux += ( F[ ii + IIMAX*ik ] )
                             * exp( complex<double>(0, -M_2PI*q*z/pm.L[ip]) )
                             * exp( beta0_i * z );
                 }
-                A[ iq + IQMAX*ip ] = temp/( double(IKMAX-1) );
+                A[ iq + IQMAX*ip ] = aux/( double(IKMAX-1) );
             }
         }
     }
 }
 
-void psi_finite_energy_in_xy( int iz, double dx, double dy, double dz, Parameters pm, complex<double> * A, complex<double> * h, complex<double> * b, int IQMAX, int IPMAX, complex<double> * field_Ex, complex<double> * field_Ey, complex<double> * field_Ez )
+void fields_finite_energy_in_xy( int iz, double dx, double dy, double dz,
+                                Parameters pm, complex<double> * A,
+                                complex<double> * h, complex<double> * b, int IQMAX, int IPMAX,
+                                complex<double> * field_Ex, complex<double> * field_Ey, complex<double> * field_Ez )
 {
     // Eq (20) of [5].
 
@@ -325,57 +307,67 @@ void psi_finite_energy_in_xy( int iz, double dx, double dy, double dz, Parameter
             double rhorho = xx + yy;
             double rho_2_cosphi = ( double(2) ) * x;
 
-            complex<double> psiqp_parallel = complex<double> (0, 0);
-            complex<double> psiqp_perpendicular = complex<double> (0, 0);
+            complex<double> psi_parallel = complex<double> (0, 0);
+            complex<double> psi_perpendicular = complex<double> (0, 0);
 
             for ( int ip=0; ip<IPMAX; ip++ )
             {
-                double wwp = pm.w[ip]*pm.w[ip];
-                complex<double> psiqp = complex<double> (0, 0);
-                complex<double> mup = double(1) + ( complex<double>(0,2) )*z/( wwp * pm.k );
+                double ww = pm.w[ip]*pm.w[ip];
+                complex<double> psi = complex<double> (0, 0);
+                complex<double> mu = double(1) + ( complex<double>(0,2) )*z/( ww * pm.k );
                 double rhoprhop = rhorho + pm.x0[ip]*pm.x0[ip] - rho_2_cosphi*pm.x0[ip];
                 double rhop = sqrt( rhoprhop );
                 for ( int iq=0; iq<IQMAX; iq++ )
                 {
-                    psiqp += A[ iq + IQMAX*ip ]
-                            * bessel::cyl_j0( h[iq + IQMAX*ip]*rhop/mup )
+                    psi += A[ iq + IQMAX*ip ]
+                            * bessel::cyl_j0( h[iq + IQMAX*ip]*rhop/mu )
                             * exp(
-                                    + b[iq + IQMAX*ip]*z_times_i/mup
-                                    - z_times_i*pm.k/mup
+                                    + b[iq + IQMAX*ip]*z_times_i/mu
+                                    - z_times_i*pm.k/mu
                                     + z_times_i*pm.k
-                                    - rhoprhop/(wwp*mup) 
+                                    - rhoprhop/(ww*mu) 
                                 )
-                            / mup;
+                            / mu;
                 }
 
                 // To distinguish parallel and perpendicular polarizations
                 if ( ip % 2 ) // ip odd -> p even
                 {
-                    psiqp_perpendicular += psiqp;
+                    psi_perpendicular += psi;
                 }
                 else // ip even -> p odd
                 {
-                    psiqp_parallel += psiqp;
+                    psi_parallel += psi;
                 }
             }
 
-            if ( pm.polarization == "linear" )
+            if ( pm.polarization == "scalar" )
             {
-                field_Ex[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psiqp_parallel + psiqp_perpendicular;
+                field_Ex[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psi_parallel + psi_perpendicular;
                 field_Ey[ix + pm.xpoints*(iy + pm.ypoints*iz)] = complex<double>(0,0);
                 field_Ez[ix + pm.xpoints*(iy + pm.ypoints*iz)] = complex<double>(0,0);
             }
+            if ( pm.polarization == "linear" )
+            {
+                field_Ex[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psi_parallel + psi_perpendicular;
+                field_Ey[ix + pm.xpoints*(iy + pm.ypoints*iz)] = complex<double>(0,0);
+                field_Ez[ix + pm.xpoints*(iy + pm.ypoints*iz)] = complex<double>(0,0); // Paraxial beam
+            }
             else if ( pm.polarization == "linear_crossed" )
             {
-                field_Ex[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psiqp_parallel;
-                field_Ey[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psiqp_perpendicular;
-                field_Ez[ix + pm.xpoints*(iy + pm.ypoints*iz)] = complex<double>(0,0);
+                field_Ex[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psi_parallel;
+                field_Ey[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psi_perpendicular;
+                field_Ez[ix + pm.xpoints*(iy + pm.ypoints*iz)] = complex<double>(0,0); // Paraxial beam
             }
         }
     }
 }
 
-void psi_resistant_in_xy( int iz, double dx, double dy, double dz, Parameters pm, complex<double> * A, complex<double> * h, complex<double> * b, int IQMAX, int IPMAX, complex<double> * field_Ex, complex<double> * field_Ey, complex<double> * field_Ez )
+void fields_resistant_in_xy( int iz, double dx, double dy, double dz,
+                            Parameters pm, complex<double> * A,
+                            complex<double> * h, complex<double> * b,
+                            int IQMAX, int IPMAX,
+                            complex<double> * field_Ex, complex<double> * field_Ey, complex<double> * field_Ez )
 {
     // Eq (2) of [1].
 
@@ -395,16 +387,16 @@ void psi_resistant_in_xy( int iz, double dx, double dy, double dz, Parameters pm
             double rhorho = xx + yy;
             double rho_2_cosphi = ( double(2) ) * x;
 
-            complex<double> psiqp_parallel = complex<double> (0, 0);
-            complex<double> psiqp_perpendicular = complex<double> (0, 0);
+            complex<double> psi_parallel = complex<double> (0, 0);
+            complex<double> psi_perpendicular = complex<double> (0, 0);
             
             for ( int ip=0; ip<IPMAX; ip++ )
             {
-                complex<double> psiqp = complex<double> (0, 0);
+                complex<double> psi = complex<double> (0, 0);
                 double rhop = sqrt( rhorho + pm.x0[ip]*pm.x0[ip] - rho_2_cosphi*pm.x0[ip] );
                 for ( int iq=0; iq<IQMAX; iq++ )
                 {
-                    psiqp += A[ iq + IQMAX*ip ]
+                    psi += A[ iq + IQMAX*ip ]
                             * bessel::cyl_j0( h[iq + IQMAX*ip]*rhop )
                             * exp( b[iq + IQMAX*ip]*z_times_i );
                 }
@@ -412,36 +404,44 @@ void psi_resistant_in_xy( int iz, double dx, double dy, double dz, Parameters pm
                 // To distinguish parallel and perpendicular polarizations
                 if ( ip % 2 ) // ip odd -> p even
                 {
-                    psiqp_perpendicular += psiqp;
+                    psi_perpendicular += psi;
                 }
                 else // ip even -> p odd
                 {
-                    psiqp_parallel += psiqp;
+                    psi_parallel += psi;
                 }
 
             }
 
-            if ( pm.polarization == "linear" )
+            if ( pm.polarization == "scalar" )
             {
-                field_Ex[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psiqp_parallel + psiqp_perpendicular;
+                field_Ex[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psi_parallel + psi_perpendicular;
+                field_Ey[ix + pm.xpoints*(iy + pm.ypoints*iz)] = complex<double>(0,0);
+                field_Ez[ix + pm.xpoints*(iy + pm.ypoints*iz)] = complex<double>(0,0);
+            }
+            else if ( pm.polarization == "linear" )
+            {
+                field_Ex[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psi_parallel + psi_perpendicular;
                 field_Ey[ix + pm.xpoints*(iy + pm.ypoints*iz)] = complex<double>(0,0);
                 field_Ez[ix + pm.xpoints*(iy + pm.ypoints*iz)] = complex<double>(0,0); // Paraxial beam
             }
             else if ( pm.polarization == "linear_crossed" )
             {
-                field_Ex[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psiqp_parallel;
-                field_Ey[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psiqp_perpendicular;
+                field_Ex[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psi_parallel;
+                field_Ey[ix + pm.xpoints*(iy + pm.ypoints*iz)] = psi_perpendicular;
                 field_Ez[ix + pm.xpoints*(iy + pm.ypoints*iz)] = complex<double>(0,0); // Paraxial beam
             }
         }
     }
 }
 
-void calculate_field( Parameters pm, complex<double> * A, complex<double> * h, complex<double> * b, int IQMAX, int IPMAX, complex<double> * field_Ex, complex<double> * field_Ey, complex<double> * field_Ez )
-{        
-    double dx = (pm.xmax-pm.xmin)/( double(pm.xpoints) );
-    double dy = (pm.ymax-pm.ymin)/( double(pm.ypoints) );
-    double dz = (pm.zmax-pm.zmin)/( double(pm.zpoints) );
+void calculate_field( Parameters pm, complex<double> * A,
+                        complex<double> * h, complex<double> * b, int IQMAX, int IPMAX,
+                        complex<double> * field_Ex, complex<double> * field_Ey, complex<double> * field_Ez )
+{
+    double dx = (pm.xmax-pm.xmin)/( double(pm.xpoints-1) );
+    double dy = (pm.ymax-pm.ymin)/( double(pm.ypoints-1) );
+    double dz = (pm.zmax-pm.zmin)/( double(pm.zpoints-1) );
 
     if ( pm.is_async )
     {
@@ -450,14 +450,14 @@ void calculate_field( Parameters pm, complex<double> * A, complex<double> * h, c
         {
             for ( int iz=0; iz<pm.zpoints; iz++ )
             {
-                futures.push_back ( async( launch::async, psi_finite_energy_in_xy, iz, dx, dy, dz, pm, A, h, b, IQMAX, IPMAX, field_Ex, field_Ey, field_Ez ) );
+                futures.push_back ( async( launch::async, fields_finite_energy_in_xy, iz, dx, dy, dz, pm, A, h, b, IQMAX, IPMAX, field_Ex, field_Ey, field_Ez ) );
             }       
         }
         else if ( pm.method == "resistant" || pm.method == "nonresistant" || pm.method == "resistant_realh" )
         {
             for ( int iz=0; iz<pm.zpoints; iz++ )
             {
-                futures.push_back ( async( launch::async, psi_resistant_in_xy, iz, dx, dy, dz, pm, A, h, b, IQMAX, IPMAX, field_Ex, field_Ey, field_Ez ) );
+                futures.push_back ( async( launch::async, fields_resistant_in_xy, iz, dx, dy, dz, pm, A, h, b, IQMAX, IPMAX, field_Ex, field_Ey, field_Ez ) );
             } 
         }
         for(auto &e : futures)
@@ -471,14 +471,14 @@ void calculate_field( Parameters pm, complex<double> * A, complex<double> * h, c
         {
             for ( int iz=0; iz<pm.zpoints; iz++ )
             {
-                psi_finite_energy_in_xy( iz, dx, dy, dz, pm, A, h, b, IQMAX, IPMAX, field_Ex, field_Ey, field_Ez );
+                fields_finite_energy_in_xy( iz, dx, dy, dz, pm, A, h, b, IQMAX, IPMAX, field_Ex, field_Ey, field_Ez );
             }       
         }
         else if ( pm.method == "resistant" || pm.method == "nonresistant" || pm.method == "resistant_realh" )
         {
             for ( int iz=0; iz<pm.zpoints; iz++ )
             {
-                psi_resistant_in_xy( iz, dx, dy, dz, pm, A, h, b, IQMAX, IPMAX, field_Ex, field_Ey, field_Ez );
+                fields_resistant_in_xy( iz, dx, dy, dz, pm, A, h, b, IQMAX, IPMAX, field_Ex, field_Ey, field_Ez );
             } 
         }
     }
@@ -522,7 +522,7 @@ int main()
 
     // General parameters of FWs
     pm.method = "resistant";
-    pm.polarization = "linear";
+    pm.polarization = "scalar";
     pm.nr = 1.4;
     pm.ni = 256e-8;
     pm.n = complex<double> ( pm.nr , pm.ni );
@@ -563,17 +563,17 @@ int main()
     pm.w = new double [ IPMAX ];
     for ( int ip=0; ip<IPMAX; ip++ )
     {
-        pm.w[ip] = ( ( pm.L[ip] * real( h[pm.N + IQMAX*ip] ) )/( ( double(2) ) * pm.nr * pm.k0 ) );
+        pm.w[ip] = ( pm.L[ip] * real( h[pm.N + IQMAX*ip] ) )/( ( double(2) )*real(pm.k) );
     }
 
     // Finding the maximum spot among all P LFWs to eventually use in dx0
     pm.lfw_spot_radius_max = double(0);
     for ( int ip=0; ip<IPMAX; ip++ )
     {
-        double temp = 2.405 / real( h[pm.N + IQMAX*ip] );
-        if ( temp > pm.lfw_spot_radius_max )
+        double aux = 2.405 / real( h[pm.N + IQMAX*ip] );
+        if ( aux > pm.lfw_spot_radius_max )
         {
-            pm.lfw_spot_radius_max = temp;
+            pm.lfw_spot_radius_max = aux;
         }
     }
 
@@ -592,16 +592,16 @@ int main()
     // Data calculation parameters
     pm.xmin = 0.;
     pm.xmax = ( double(pm.P) ) * pm.dx0;
-    pm.xpoints = 2 * pm.P;
+    pm.xpoints = 208;
     pm.ymin = 0.;
-    pm.ymax = 0.;
-    pm.ypoints = 1;
+    pm.ymax = 0.5*pm.xmax;
+    pm.ypoints = 104;
     pm.zmin = 0.;
     pm.zmax = pm.L[0];
     pm.zpoints = 276;
 
-    // Parallel calculation
-    pm.is_async = true;
+    // Asynchronously calculation
+    pm.is_async = false;
 
     // There is no need to change values in all of the following
 
@@ -633,9 +633,9 @@ int main()
     calculate_field( pm, A, h, b, IQMAX, IPMAX, field_Ex, field_Ey, field_Ez );
 
     // Write psi to .m file
-    m_3d_write_from_complex_array( "Ex.m", " SFW ", pm.xpoints, pm.ypoints, pm.zpoints, field_Ex );
-    m_3d_write_from_complex_array( "Ey.m", " SFW ", pm.xpoints, pm.ypoints, pm.zpoints, field_Ey );
-    m_3d_write_from_complex_array( "Ez.m", " SFW ", pm.xpoints, pm.ypoints, pm.zpoints, field_Ez );
+    m_3d_write_from_complex_array( "Ex.m", " SFW: component x of the electric field ", pm.xpoints, pm.ypoints, pm.zpoints, field_Ex );
+    m_3d_write_from_complex_array( "Ey.m", " SFW: component y of the electric field ", pm.xpoints, pm.ypoints, pm.zpoints, field_Ey );
+    m_3d_write_from_complex_array( "Ez.m", " SFW: component z of the electric field ", pm.xpoints, pm.ypoints, pm.zpoints, field_Ez );
 
     cout << "Done.\nElapsed time: " << ( time(nullptr) - start_time ) << " seconds." << endl;
 
